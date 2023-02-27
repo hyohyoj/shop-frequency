@@ -33,5 +33,5 @@ build/
 .vscode/
 
 # Project exclude paths
-/src/main/resources/hyo/shop/
-/src/main/resources/static/images/
+#/src/main/resources/hyo/shop/
+#/src/main/resources/static/images/

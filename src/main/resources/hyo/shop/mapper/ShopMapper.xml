@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hyo.shop.mapper.ShopMapper">
+
+    <select id="getUser" parameterType="hyo.shop.domain.Login" resultType="hyo.shop.domain.Login">
+        SELECT
+             user_id
+            ,user_pw
+            ,auth_code
+        FROM
+            user_info
+        WHERE
+            user_id = #{user_id}
+    </select>
+
+    <insert id="insert" parameterType="hyo.shop.domain.Login" useGeneratedKeys="true" keyProperty="goodsNo">
+        INSERT INTO goods_info(
+             goods_title
+            ,goods_desc
+            ,goods_price
+            ,goods_stock
+            ,frequency_yn
+            ,insert_user_id
+        )
+        VALUES(
+             #{goodsTitle}
+            ,#{goodsDesc}
+            ,#{goodsPrice}
+            ,#{goodsStock}
+            <choose>
+                <when test="frequencyYn == 'Y'.toString()">
+                    ,#{frequencyYn}
+                </when>
+                <otherwise>
+                    ,'N'
+                </otherwise>
+            </choose>
+            ,#{insertUserId}
+        )
+    </insert>
+
+    <select id="getUserList" resultType="hyo.shop.domain.Login">
+        SELECT
+             user_id
+            ,auth_code
+        FROM
+            user_info
+    </select>
+
+    <update id="updateUser" parameterType="hyo.shop.domain.Login">
+        UPDATE
+            user_info
+        SET
+            <choose>
+                <when test="auth_code == 'admin'.toString()">
+                    auth_code = 'admin'
+                </when>
+                <otherwise>
+                    auth_code = null
+                </otherwise>
+            </choose>
+        WHERE
+            user_id = #{user_id}
+    </update>
+
+</mapper>
