@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Insert Board Type</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    #goods_price::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+</style>
+<script th:inline="javascript">
+   $(document).ready(function () {
+
+      $("#submit").on("click", function() {
+
+          // file
+          let file = $("#goodsFileInsertForm")[0];       // <- form에 있는 모든 file 정보 얻어오는 법
+          let formData = new FormData(file);
+          formData.append('files', file);
+
+          // goods json
+          let userId = $("#user_id").val();
+          let desc = $("#goods_desc").val();
+          let title = $("#goods_title").val();
+          let price = $("#goods_price").val();
+          let stock = $("#goods_stock").val();
+          let frequency = $("#frequency_yn").val();
+
+          if(typeof price == 'undefined' || price == '' ) price = 0;
+          if(typeof stock == 'undefined' || stock == '' ) stock = 0;
+
+          // 공백 체크
+          if(desc == '') {
+              alert('상품 설명을 작성해주세요.');
+              $("#goods_desc").focus();
+              return false;
+          } else if(title == '') {
+              alert('상품명을 작성해주세요.');
+              $("#goods_title").focus();
+              return false;
+          }
+
+          let data = {
+                  'insertUserId' : userId,
+                  'goodsTitle' : title,
+                  'goodsDesc' : desc,
+                  'goodsPrice' : price,
+                  'goodsStock' : stock,
+                  'frequencyYn' : frequency,
+                  'changeYn' : 'Y'
+          }
+          formData.append('goods', new Blob([JSON.stringify(data)], {type: 'application/json'}));
+
+          // 사진 첨부 필수 체크
+          ImageUploadCheck(formData);
+
+      });
+
+      function ImageUploadCheck(formData) {
+          $.ajax({
+              type : "POST",
+              url : "/admin/imageCheck",
+              dataType:"text",
+              enctype: 'multipart/form-data',
+              data : formData,
+              contentType: false,
+              processData: false,
+              cache: false,
+              success : function(data){
+                    if(data == '성공') {
+                      insertGoods(formData);
+                    } else {
+                      alert('상품 등록은 사진 첨부가 필수입니다.');
+                    }
+              },
+              error : function(request,status,error) {
+                    if(status == '500') {
+                        alert('에러가 발생했습니다.');
+                    } else {
+                        alert('파일 사이즈가 너무 큽니다.');
+                    }
+                }
+          });
+      }
+
+      function insertGoods(formData) {
+          $.ajax({
+              type : "POST",
+              url : "/admin/goods/insert",
+              dataType:"text",
+              enctype: 'multipart/form-data',
+              data : formData,
+              contentType: false,
+              processData: false,
+              cache: false,
+              success : function(data){
+                    console.log(data);
+
+                    if(data == '성공') {
+                      alert('등록되었습니다.');
+                      window.location.replace('/admin');
+                    } else {
+                      alert('업로드 실패');
+                    }
+              },
+              error : function(request,status,error) {
+                    if(status == '500') {
+                        alert('에러가 발생했습니다.');
+                    } else {
+                        alert('파일 사이즈가 너무 큽니다.');
+                    }
+              }
+          });
+      }
+
+  })
+
+      //파일 인덱스 처리용 전역 변수
+      let fileIdx = 0;
+
+      function addFile() {
+
+        fileIdx++;
+
+        const fileHtml = `
+            <div data-name="fileDiv">
+                <label for="file_${fileIdx}"></label>
+                <div>
+                    <input type="file" name="files" id="file_${fileIdx}" class="upload-hidden" onchange="changeFileName(this)" />
+
+                    <button type="button" onclick="removeFile(this)">-</button>
+                </div>
+            </div>
+        `;
+
+        $('#btnDiv').before(fileHtml);
+    }
+
+    function removeFile(elem) {
+
+        const prevTag = $(elem).prev().prop('tagName');
+
+        //첫번째 파일인 경우 div 삭제 대신 file input 초기화
+        if (prevTag === 'BUTTON') {
+            const file = $(elem).prevAll('input[type="file"]');
+            file.val('');
+            return false;
+        }
+
+        const target = $(elem).parents('div[data-name="fileDiv"]');
+        target.remove();
+    }
+
+    function changeFileName(file) {
+        file = $(file);
+        const filename = file[0].files[0].name;
+
+        console.log("filename : " + filename);
+    }
+</script>
+<body>
+
+<input type="hidden" id="user_id" th:value="${session.loginMember.user_id}" >
+
+<h1>상품 추가</h1>
+<form th:action="@{/admin/goods/insert}" th:object="${goodsForm}" method="post" enctype="multipart/form-data" onsubmit="return false;" id="goodsFileInsertForm">
+
+    <div>
+        <label for="goods_title">상품명 : </label>
+        <input type="text" id="goods_title" th:field="*{goodsTitle}">
+    </div>
+    <div>
+        <p for="goods_desc">상품 설명</p>
+        <textarea id="goods_desc" style="width: 397px; height: 240px;" th:field="*{goodsDesc}"></textarea>
+    </div>
+    <br>
+    <div>
+        <label for="frequency_yn">프리퀀시</label>
+        <input type="checkbox" id="frequency_yn" name="frequency_yn" value="Y" th:checked="${#strings.equals(frequencyYn, 'Y')}" />
+    </div>
+    <br>
+    <div>
+        <label for="goods_price">가격 : </label>
+        <input style="width: 120px; text-align:right;" type="number" min="0" id="goods_price" name="goods_price" value="0" /><span>원</span>
+    </div>
+    <br>
+    <div>
+        <label for="goods_stock">개수 : </label>
+        <input style="width: 30px;" type="number" min="0" id="goods_stock" name="goods_stock" value="0" /><span>개</span>
+    </div>
+    <br>
+    <hr>
+    <div data-name="fileDiv">
+        <label for="file_0"><strong>상품 이미지</strong></label>
+        <div>
+            <input type="file" name="files" id="file_0" class="upload-hidden" onchange="changeFileName(this)" />
+            <button type="button" onclick="addFile()">+</button>
+            <button type="button" onclick="removeFile(this)">-</button>
+        </div>
+    </div>
+    <hr id="btnDiv">
+</form>
+    <input id="submit" type="submit" value="완료" />
+    <button onclick="location.href='items.html'" th:onclick="|location.href='@{/admin}'|" type="button">취소</button>
+</body>
+</html>

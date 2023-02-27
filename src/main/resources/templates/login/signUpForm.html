@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>SignUp</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+
+        function signUpCheck() {
+            let userId = $("#user_id").val();
+            let userPw = $("#user_pw").val();
+
+            let params = {
+                'user_id' : userId,
+                'user_pw' : userPw
+            }
+
+            if(userId == "" || userPw == "") {
+              $("#errorMsg").html('값을 입력해주세요.');
+              return false;
+            }
+
+            if(!validationId(userId)) {
+              $("#errorMsg").html('아이디 형식을 확인해주세요');
+              return false;
+            }
+
+            if(!validationPw(userPw)) {
+              $("#errorMsg").html('비밀번호 형식을 확인해주세요');
+              return false;
+            }
+
+            $.ajax({
+                type : "POST",
+                url : "/signUpCheck",
+                dataType:"text",
+                contentType : 'application/json; charset=utf-8',
+                data : JSON.stringify(params),
+                success : function(data){
+                      console.log(data);
+                      if(data == '성공') {
+                        $("form").submit();
+                        //signUp(params);
+                      } else {
+                        $("#errorMsg").html(data);
+                      }
+                }
+            });
+        }
+
+        function signUp(params) {
+            $.ajax({
+                type : "POST",
+                url : "/signup",
+                dataType:"text",
+                contentType : 'application/json; charset=utf-8',
+                data : JSON.stringify(params),
+                success : function(data){
+                }
+            });
+        }
+
+        function validationId(str) {
+            return /^[a-z]+(?=.*[a-z])(?=.*\d)[a-z\d]{3,20}$/.test(str);
+        }
+
+        function validationPw(str) {
+            return (/^(?=.*[a-zA-Z])((?=.*[0-9])|(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+])).{8,20}$/).test(str);
+        }
+
+        $("#signUp").on("click", function() {
+            signUpCheck();
+        })
+
+        $("#user_id").on("keyup",function(key){
+            if(key.keyCode==13) {
+                if(!$("#user_pw").val()) {
+                    $("#user_pw").focus();
+                } else if(!$("#user_id").val()){
+                    $("#user_id").focus();
+                } else {
+                    signUpCheck();
+                }
+            }
+        });
+        $("#user_pw").on("keyup",function(key){
+            if(key.keyCode==13) {
+                if(!$("#user_id").val()) {
+                    $("#user_id").focus();
+                } else if(!$("#user_pw").val()){
+                    $("#user_pw").focus();
+                } else {
+                    signUpCheck();
+                }
+            }
+        });
+
+    })
+</script>
+
+<body>
+<h1>회원가입</h1>
+<form action="/signup" th:object="${signUpForm}" method="post" id="signUpForm">
+
+  <p id="errorMsg" style="color:red;"></p>
+
+  <div>
+    <label for="user_id">ID</label>
+    <input type="text" id="user_id" th:field="*{user_id}" class="form-control"
+           th:errorclass="field-error">
+  </div>
+  <span style="color:gray;">아이디의 첫 글자는 영문 소문자이고, 영문 소문자와 숫자를 가진 3~20자리 문자열이어야 합니다.</span>
+  <br>
+  <div>
+    <label for="user_pw">비밀번호</label>
+    <input type="password" id="user_pw" th:field="*{user_pw}" class="form-control"
+           th:errorclass="field-error">
+  </div>
+  <span style="color:gray;">비밀번호는 영문 대소문자, 숫자, 특수문자이며 1개 이상의 특수문자 또는 숫자를 가진 8~20자리 문자열이어야 합니다.</span>
+
+  <hr class="my-4">
+</form>
+<div class="row">
+  <div class="col">
+    <button id="signUp" type="button">가입하기</button>
+  </div>
+  <div class="col">
+    <button onclick="location.href='items.html'"
+            th:onclick="|location.href='@{/}'|"
+            type="button">취소</button>
+  </div>
+</div>
+</body>
+</html>

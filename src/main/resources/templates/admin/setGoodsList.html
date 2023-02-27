@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<body>
+<tr style='cursor:pointer; background-color: #eda712;' th:each="goods, status : ${goodsList}">
+    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${goodsCount - (((boardPage - 1) * 10) + status.index)}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|">
+        <div>
+            <img th:src="${notice.imageUploadPath}" style="width: 100px;">
+        </div>
+    </td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:utext="${notice.board_title}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${#strings.arraySplit(notice.insert_date, 'T')[0] + ' ' + #strings.arraySplit(notice.insert_date, 'T')[1]}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${notice.user_id}"></td>
+</tr>
+</body>
+</html>
