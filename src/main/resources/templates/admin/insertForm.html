@@ -44,12 +44,12 @@
           }
 
           let data = {
-                  'insertUserId' : userId,
-                  'goodsTitle' : title,
-                  'goodsDesc' : desc,
-                  'goodsPrice' : price,
-                  'goodsStock' : stock,
-                  'frequencyYn' : frequency,
+                  'insert_user_id' : userId,
+                  'goods_title' : title,
+                  'goods_desc' : desc,
+                  'goods_price' : price,
+                  'goods_stock' : stock,
+                  'frequency_yn' : frequency,
                   'changeYn' : 'Y'
           }
           formData.append('goods', new Blob([JSON.stringify(data)], {type: 'application/json'}));
@@ -170,16 +170,16 @@
 
     <div>
         <label for="goods_title">상품명 : </label>
-        <input type="text" id="goods_title" th:field="*{goodsTitle}">
+        <input type="text" id="goods_title" th:field="*{goods_title}">
     </div>
     <div>
         <p for="goods_desc">상품 설명</p>
-        <textarea id="goods_desc" style="width: 397px; height: 240px;" th:field="*{goodsDesc}"></textarea>
+        <textarea id="goods_desc" style="width: 397px; height: 240px;" th:field="*{goods_desc}"></textarea>
     </div>
     <br>
     <div>
         <label for="frequency_yn">프리퀀시</label>
-        <input type="checkbox" id="frequency_yn" name="frequency_yn" value="Y" th:checked="${#strings.equals(frequencyYn, 'Y')}" />
+        <input type="checkbox" id="frequency_yn" name="frequency_yn" value="Y" th:checked="${#strings.equals(frequency_yn, 'Y')}" />
     </div>
     <br>
     <div>

@@ -1,25 +1,25 @@
 package hyo.shop.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hyo.shop.Service.FileInfoService;
 import hyo.shop.Service.ShopService;
 import hyo.shop.common.FileUtils;
 import hyo.shop.common.SessionConstants;
-import hyo.shop.domain.FileInfo;
-import hyo.shop.domain.Goods;
-import hyo.shop.domain.Login;
+import hyo.shop.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/**")
@@ -30,11 +30,11 @@ public class AdminController {
     private final FileInfoService fileInfoService;
     private final FileUtils fileUtils;
 
-//    @ExceptionHandler(value = Exception.class)
-//    public String controllerExceptionHandler(Exception e) {
-//        System.out.println(new RuntimeException(e.getMessage() + " : 에러 발생"));
-//        return "/error";
-//    }
+    @ExceptionHandler(value = Exception.class)
+    public String controllerExceptionHandler(Exception e) {
+        System.out.println(new RuntimeException(e.getMessage() + " : 에러 발생"));
+        return "/error";
+    }
 
     // 관리자 페이지 내부 기능 권한 체크
     public String adminSessionRedirect(Login loginMember, String redirect, HttpServletRequest request) {
@@ -50,7 +50,7 @@ public class AdminController {
         }
     }
 
-    /* 갤러리 게시판 사진 첨부 필수 체크 */
+    /* 사진 첨부 필수 체크 */
     @PostMapping("/imageCheck")
     @ResponseBody
     public String imageCheck(@RequestPart(value="files", required = false) MultipartFile[] files,
@@ -131,7 +131,7 @@ public class AdminController {
             result = "성공";
 
             // insert한 게시글의 goods_no 받아옴
-            Long goodsNo = goods.getGoodsNo();
+            Long goodsNo = goods.getGoods_no();
             System.out.println("goodsNo : " +  goodsNo);
 
             // 해당 게시글 첨부 파일 업로드
@@ -146,6 +146,49 @@ public class AdminController {
 
         return result;
     }
+
+    // ModelAndView 형태로 데이터가 세팅 된 뷰를 반환
+    @PostMapping("/getGoodsList")
+    @ResponseBody
+    public ModelAndView getGoodsList(
+            @RequestBody Map<String, Object> map,      // JSON 형식으로 받아옴
+            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember
+    )
+    {
+
+        ModelAndView mv = new ModelAndView("jsonView"); // json 형태로 데이터 전송
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        SearchInfo searchInfo = mapper.convertValue(map.get("searchInfo"), SearchInfo.class);
+        Goods goods = mapper.convertValue(map.get("goodsInfo"), Goods.class);
+
+        Map<String, Object> searchMap = new HashMap<>();
+
+        try{
+            int goodsCount = shopService.goodsCount();
+            Pagination pagination = new Pagination(goodsCount, searchInfo);
+
+            searchInfo.setPagination(pagination);
+
+            searchMap.put("goodsVo", goods);
+            searchMap.put("searchVo", searchInfo);
+
+            List<Goods> goodsList = shopService.goodsList(searchMap);
+            goodsList = fileUtils.setImageUploadPath(goodsList);    // 출력 이미지 경로 지정
+
+            mv.setViewName("/admin/setGoodsList");
+            mv.addObject("goodsList", goodsList);                   // 상품 목록
+            mv.addObject("sessionId", loginMember.getUser_id());    // 세션 아이디
+            mv.addObject("searchInfo", searchInfo);                 // 페이징 정보
+        } catch (Exception e) {
+            System.out.println(e + " : 에러 발생");
+            mv.setViewName("/error");
+            return mv;
+        }
+        return mv;
+    }
+
 //
 //    @PostMapping("/boardType/insert")
 //    @ResponseBody

@@ -36,7 +36,7 @@ public class ShopController {
             @PathVariable("imagename") String imagename,
             @PathVariable("uploaddate") String uploaddate) throws IOException
     {
-        String uploadPath = Paths.get("C:", "develop", "upload", uploaddate, imagename).toString();
+        String uploadPath = Paths.get("C:", "develop", "shopImage", uploaddate, imagename).toString();
 
         InputStream imageStream = new FileInputStream(uploadPath);
         byte[] imageByteArray = IOUtils.toByteArray(imageStream);

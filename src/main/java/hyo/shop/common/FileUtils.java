@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -159,7 +158,7 @@ public class FileUtils {
 
         for (Goods goods : goodsList) {
             // 게시글의 첨부 파일 모두 가져옴
-            fileList = fileInfoService.selectFileList(goods.getGoodsNo().intValue());
+            fileList = fileInfoService.selectFileList(goods.getGoods_no().intValue());
 
             for (FileInfo file : fileList) {
                 // 파일 확장자 체크

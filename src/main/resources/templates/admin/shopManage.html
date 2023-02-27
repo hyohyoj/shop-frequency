@@ -6,16 +6,67 @@
     <title>Admin Home</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
+<style>
+    table {
+        border-spacing: 0px;
+        border: 1px solid;
+    }
 
+    ul {
+        text-align: center;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-right: 0;
+        padding-left :0;
+    }
+    ul li {
+        text-align: center;
+        float: left;
+        list-style:none;
+
+    }
+
+    ul li a {
+        display: block;
+        font-size: 14px;
+        color: black;
+        padding: 9px 12px;
+        border-right: solid 1px #ccc;
+        box-sizing: border-box;
+        text-decoration-line:none;
+    }
+
+    ul li.on {
+        background: #eda712;
+    }
+
+    ul li.on a {
+        color: #fff;
+    }
+</style>
 <script th:inline="javascript">
+
+    let page;
+
     $(document).ready(function () {
 
-        function getBoardTypeList() {
+        let params = {
+                'searchInfo' : {
+                    'page' : (page) ? 1 : page,
+                    'recordSize' : 10,
+                },
+                'goodsInfo' : {
+                    'insert_user_id' : [[${session.loginMember.user_id}]]
+                }
+        }
+
+        function getGoodsList() {
             $.ajax({
-                type : "GET",
-                url : "/board/getBoardType",
+                type : "POST",
+                url : "/admin/getGoodsList",
                 dataType:"text",
-                data : { 'auth' : 'admin' },
+                contentType : 'application/json; charset=utf-8',
+                data : JSON.stringify(params),
                 success : function(data){
                       // 초기화
                       $("#dataTableBody").empty();
@@ -39,7 +90,7 @@
             });
         }
 
-        //getBoardTypeList();
+        getGoodsList();
         //getUserList();
     })
 </script>
@@ -58,17 +109,17 @@
 </form>
 <hr>
 <h3>[상품 관리]</h3>
-<table style="width:500px; text-align:center;">
-    <thead>
+<table style="width:800px; text-align:center;">
+    <thead style="background-color:lightsteelblue;">
     <tr>
         <th>번호</th>
         <th></th>
         <th>상품명</th>
-        <th>생성자</th>
         <th>가격</th>
         <th>수량</th>
         <th>프리퀀시</th>
         <th>등록자</th>
+        <th>등록시간</th>
     </tr>
     </thead>
     <tbody id="dataTableBody">

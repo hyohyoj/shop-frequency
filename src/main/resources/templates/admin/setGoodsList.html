@@ -2,16 +2,37 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <html lang="ko">
 <body>
-<tr style='cursor:pointer; background-color: #eda712;' th:each="goods, status : ${goodsList}">
-    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${goodsCount - (((boardPage - 1) * 10) + status.index)}"></td>
-    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|">
+<tr style='cursor:pointer;' th:each="goods, status : ${goodsList}">
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|"
+        th:text="${searchInfo.pagination.totalRecordCount - (((searchInfo.page - 1) * 10) + status.index)}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|">
         <div>
-            <img th:src="${notice.imageUploadPath}" style="width: 100px;">
+            <img th:src="${goods.thumbnailUploadPath}" style="width: 100px;">
         </div>
     </td>
-    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:utext="${notice.board_title}"></td>
-    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${#strings.arraySplit(notice.insert_date, 'T')[0] + ' ' + #strings.arraySplit(notice.insert_date, 'T')[1]}"></td>
-    <td th:onclick="|location.href='@{/admin/modifyForm( goodsNo = ${goods.goodsNo} )}'|" th:text="${notice.user_id}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:utext="${goods.goods_title}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.goods_price}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.goods_stock}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${#strings.equals(goods.frequency_yn, 'Y') ? 'O' : 'X'}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.insert_user_id}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|"
+        th:text="${#strings.arraySplit(goods.insert_date, 'T')[0] + ' ' + #strings.arraySplit(goods.insert_date, 'T')[1]}"></td>
 </tr>
+<ul id="pagingul">
+</ul>
+<!--페이징 뷰단-->
+<!--if(pagination.existPrevPage) {-->
+<!--<li><a href="javascript:void(0);" th:onclick="|selectList(${(pagination.startPage - 1), type_no})|" class="page_bt first">이전</a></li>-->
+<!--}-->
+<!--for(var i = startPage; i <= endPage; i++) {-->
+<!--if(boardPage == i) {-->
+<!--<li class='on'><a href="javascript:void(0);" th:onclick="|selectList(${i, type_no});|"> i </a></li>-->
+<!--} else {-->
+<!--<li><a href="javascript:void(0);" th:onclick="|selectList(${i, type_no});|"> i </a></li>-->
+<!--}-->
+<!--}-->
+<!--if(pagination.existNextPage) {-->
+<!--<li><a href="javascript:void(0);" th:onclick="|selectList(${(pagination.endPage + 1), type_no})|" class="page_bt first">다음</a></li>-->
+<!--}-->
 </body>
 </html>

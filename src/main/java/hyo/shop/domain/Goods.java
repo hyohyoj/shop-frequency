@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Goods {
-    private Long goodsNo;
-    private String goodsTitle;
-    private String goodsDesc;
-    private int goodsPrice;
-    private int goodsStock;
-    private String frequencyYn;
-    private String insertUserId;
-    private LocalDateTime insertDate;
+    private Long goods_no;
+    private String goods_title;
+    private String goods_desc;
+    private int goods_price;
+    private int goods_stock;
+    private String frequency_yn;
+    private String insert_user_id;
+    private LocalDateTime insert_date;
 
     //
     private String changeYn;

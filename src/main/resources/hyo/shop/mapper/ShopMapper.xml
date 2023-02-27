@@ -3,18 +3,29 @@
 
 <mapper namespace="hyo.shop.mapper.ShopMapper">
 
-    <select id="getUser" parameterType="hyo.shop.domain.Login" resultType="hyo.shop.domain.Login">
+    <select id="goodsCount" parameterType="hyo.shop.domain.Goods" resultType="int">
         SELECT
-             user_id
-            ,user_pw
-            ,auth_code
+            COUNT(*)
         FROM
-            user_info
-        WHERE
-            user_id = #{user_id}
+            goods_info
     </select>
 
-    <insert id="insert" parameterType="hyo.shop.domain.Login" useGeneratedKeys="true" keyProperty="goodsNo">
+    <select id="goodsList" parameterType="hashmap" resultType="hyo.shop.domain.Goods">
+        SELECT
+             goods_no
+            ,goods_title
+            ,goods_desc
+            ,goods_price
+            ,goods_stock
+            ,frequency_yn
+            ,insert_user_id
+            ,insert_date
+        FROM
+            goods_info
+        LIMIT #{searchVo.pagination.limitStart}, #{searchVo.recordSize}
+    </select>
+
+    <insert id="insert" parameterType="hyo.shop.domain.Goods" useGeneratedKeys="true" keyProperty="goods_no">
         INSERT INTO goods_info(
              goods_title
             ,goods_desc
@@ -24,44 +35,20 @@
             ,insert_user_id
         )
         VALUES(
-             #{goodsTitle}
-            ,#{goodsDesc}
-            ,#{goodsPrice}
-            ,#{goodsStock}
+             #{goods_title}
+            ,#{goods_desc}
+            ,#{goods_price}
+            ,#{goods_stock}
             <choose>
-                <when test="frequencyYn == 'Y'.toString()">
-                    ,#{frequencyYn}
+                <when test="frequency_yn == 'Y'.toString()">
+                    ,#{frequency_yn}
                 </when>
                 <otherwise>
                     ,'N'
                 </otherwise>
             </choose>
-            ,#{insertUserId}
+            ,#{insert_user_id}
         )
     </insert>
-
-    <select id="getUserList" resultType="hyo.shop.domain.Login">
-        SELECT
-             user_id
-            ,auth_code
-        FROM
-            user_info
-    </select>
-
-    <update id="updateUser" parameterType="hyo.shop.domain.Login">
-        UPDATE
-            user_info
-        SET
-            <choose>
-                <when test="auth_code == 'admin'.toString()">
-                    auth_code = 'admin'
-                </when>
-                <otherwise>
-                    auth_code = null
-                </otherwise>
-            </choose>
-        WHERE
-            user_id = #{user_id}
-    </update>
 
 </mapper>
