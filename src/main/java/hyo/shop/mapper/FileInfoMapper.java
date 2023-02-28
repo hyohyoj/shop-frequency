@@ -11,13 +11,13 @@ public interface FileInfoMapper {
 
     FileInfo selectFileDetail(Long fileNo);
 
-    int deleteFile(Long boardNo);
+    int deleteFile(Long goodsNo);
 
-    int completeDeleteFile(Long boardNo);
+    int completeDeleteFile(Long goodsNo);
 
-    List<FileInfo> selectFileList(Integer boardNo);
+    List<FileInfo> selectFileList(Long goodsNo);
 
-    int selectFileTotalCount(Long boardNo);
+    int selectFileTotalCount(Long goodsNo);
 
     int undeleteFile(List<Long> fileNo);
 

@@ -23,7 +23,7 @@ public class Pagination {
     private void calculation(SearchInfo searchInfo) {
 
         // 전체 페이지 수 계산
-        totalPageCount = (int) Math.ceil((double) totalRecordCount / 10);
+        totalPageCount = (int) Math.ceil((double) totalRecordCount / searchInfo.getRecordSize());
 
         if(totalPageCount < searchInfo.getPageSize()) {
             searchInfo.setPageSize(totalPageCount);
@@ -43,7 +43,7 @@ public class Pagination {
         startPage = endPage - (searchInfo.getPageSize() - 1);
 
         // LIMIT 시작 위치 계산
-        limitStart = (searchInfo.getPage() - 1) * 10;
+        limitStart = (searchInfo.getPage() - 1) * searchInfo.getRecordSize();
 
         // 이전 페이지 존재 여부 확인
         existPrevPage = (startPage - 1) > 0;

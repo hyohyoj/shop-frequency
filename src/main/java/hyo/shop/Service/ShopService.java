@@ -24,7 +24,15 @@ public class ShopService {
         return shopMapper.insert(goods);
     }
 
+    public int update(Goods goods) {
+        return shopMapper.update(goods);
+    }
+
     public List<Goods> goodsList(Map<String, Object> map) {
         return shopMapper.goodsList(map);
+    }
+
+    public Goods getGoods(Long goodsNo) {
+        return shopMapper.getGoods(goodsNo);
     }
 }

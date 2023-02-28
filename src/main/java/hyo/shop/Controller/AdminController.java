@@ -77,33 +77,65 @@ public class AdminController {
         return result;
     }
 
-//    @GetMapping("/modifyForm")
-//    public String modifyForm(
-//            Model model,
-//            @RequestParam(value = "num") Long typeNo,
-//            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
-//            HttpServletRequest request)
-//    {
-//        String url = adminSessionRedirect(loginMember, request.getRequestURI(), request);
-//
-//        BoardType boardType = boardTypeService.getBoardType(typeNo);
-//
-//        model.addAttribute("boardTypeForm", boardType);
-//        return url;
-//    }
-//
-//    @PostMapping("/boardType/modify")
-//    @ResponseBody
-//    public int modifyBoardType(@ModelAttribute BoardType boardType) {
-//        Board board = new Board();
-//        board.setType_no(boardType.getType_no());
-//        board.setDelete_yn(boardType.getDelete_yn());
-//
-//        // 게시판 활성화 및 비활성화 시, 해당 게시글도 같이 변경
-//        boardService.modifyBoardYn(board);
-//        return boardTypeService.modifyBoardType(boardType);
-//    }
-//
+    @GetMapping("/modifyForm")
+    public String modifyForm(
+            Model model,
+            @RequestParam(value = "goods_no") Long goodsNo,
+            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
+            HttpServletRequest request)
+    {
+        String url = adminSessionRedirect(loginMember, request.getRequestURI(), request);
+
+        Goods goods = shopService.getGoods(goodsNo);
+        List<FileInfo> fileList = fileInfoService.selectFileList(goodsNo);
+
+        model.addAttribute("goodsForm", goods);
+        model.addAttribute("fileList", fileList);       // 게시글 첨부 파일 목록
+        return url;
+    }
+
+    @PostMapping("/goods/modify")
+    @ResponseBody
+    public int modify(@RequestPart(value="files", required = false) MultipartFile[] files,
+                      @RequestPart(value="goods") Goods goods)
+    {
+        List<Long> fileNumList = goods.getFileNumList();
+
+        int result = 0;
+        int success = 0;
+
+        success += shopService.update(goods);
+
+        if(success >= 1) {
+            result++;
+
+            // 파일이 추가, 삭제, 변경된 경우
+            if("Y".equals(goods.getChangeYn())) {
+                // 전체 삭제 처리
+                fileInfoService.deleteFile(goods.getGoods_no());
+
+                // 변경되지 않은 기존 파일의 삭제여부를 N으로 변경
+                if(!CollectionUtils.isEmpty(fileNumList)) {
+                    success = fileInfoService.undeleteFile(fileNumList);
+                    System.out.println(success);
+                    if(success >= 1) {
+                        result++;
+                    }
+                }
+
+                // 해당 게시글 첨부 파일 업로드
+                List<FileInfo> fileList = fileUtils.uploadFiles(files, goods.getGoods_no());
+                if(!CollectionUtils.isEmpty(fileList)) {
+                    success = fileInfoService.insertFiles(fileList);
+                    if(success >= 1) {
+                        result++;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     @GetMapping("/insertForm")
     public String insertForm(
             Model model,

@@ -70,7 +70,7 @@
         WHERE goods_no in (#{goods_no})
     </delete>
 
-    <select id="selectFileList" parameterType="Integer" resultType="hyo.shop.domain.FileInfo">
+    <select id="selectFileList" parameterType="long" resultType="hyo.shop.domain.FileInfo">
         SELECT
              file_no
             ,goods_no

@@ -37,44 +37,51 @@
     }
 
     ul li.on {
-        background: #eda712;
+        //background: #eda712;
+        background: lightsteelblue;
     }
 
     ul li.on a {
-        color: #fff;
+        //color: #fff;
     }
 </style>
 <script th:inline="javascript">
 
-    let page;
-
-    $(document).ready(function () {
+    function getGoodsList(page) {
 
         let params = {
-                'searchInfo' : {
-                    'page' : (page) ? 1 : page,
-                    'recordSize' : 10,
-                },
-                'goodsInfo' : {
-                    'insert_user_id' : [[${session.loginMember.user_id}]]
-                }
+            'searchInfo' : {
+                'page' : (page) ? page : 1,
+                'recordSize' : 10,
+                'pageSize' : 10
+            },
+            'goodsInfo' : {
+                'insert_user_id' : [[${session.loginMember.user_id}]]
+            }
         }
 
-        function getGoodsList() {
-            $.ajax({
-                type : "POST",
-                url : "/admin/getGoodsList",
-                dataType:"text",
-                contentType : 'application/json; charset=utf-8',
-                data : JSON.stringify(params),
-                success : function(data){
-                      // 초기화
-                      $("#dataTableBody").empty();
+        $.ajax({
+            type : "POST",
+            url : "/admin/getGoodsList",
+            dataType:"text",
+            contentType : 'application/json; charset=utf-8',
+            data : JSON.stringify(params),
+            success : function(data){
 
-                      $("#dataTableBody").html(data);
-                }
-            });
-        }
+                  let table = data.split('<!--페이징-->')[0];
+                  let paging = data.split('<!--페이징-->')[1];
+
+                  // 초기화
+                  $("#dataTableBody").empty();
+                  $("#pagingul").empty();
+
+                  $("#dataTableBody").html(table);
+                  $("#pagingul").html(paging);
+            }
+        });
+    }
+
+    $(document).ready(function () {
 
         function getUserList() {
             $.ajax({
@@ -125,6 +132,8 @@
     <tbody id="dataTableBody">
     </tbody>
 </table>
+<ul id="pagingul">
+</ul>
 <!--<hr>-->
 <!--<h3>[회원관리]</h3>-->
 <!--<table style="width:500px; text-align:center;">-->

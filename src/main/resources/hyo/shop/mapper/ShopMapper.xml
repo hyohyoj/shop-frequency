@@ -25,6 +25,42 @@
         LIMIT #{searchVo.pagination.limitStart}, #{searchVo.recordSize}
     </select>
 
+    <select id="getGoods" parameterType="Long" resultType="hyo.shop.domain.Goods">
+        SELECT
+             goods_no
+            ,goods_title
+            ,goods_desc
+            ,goods_price
+            ,goods_stock
+            ,frequency_yn
+            ,insert_user_id
+            ,insert_date
+        FROM
+            goods_info
+        WHERE
+            goods_no = #{goodsNo}
+    </select>
+
+    <update id="update" parameterType="hyo.shop.domain.Goods">
+        UPDATE
+            goods_info
+        SET
+             goods_title = #{goods_title}
+            ,goods_desc = #{goods_desc}
+            ,goods_price = #{goods_price}
+            ,goods_stock = #{goods_stock}
+            <choose>
+                <when test="frequency_yn == 'Y'.toString()">
+                    ,frequency_yn = #{frequency_yn}
+                </when>
+                <otherwise>
+                    ,frequency_yn = 'N'
+                </otherwise>
+            </choose>
+        WHERE
+            goods_no = #{goods_no}
+    </update>
+
     <insert id="insert" parameterType="hyo.shop.domain.Goods" useGeneratedKeys="true" keyProperty="goods_no">
         INSERT INTO goods_info(
              goods_title

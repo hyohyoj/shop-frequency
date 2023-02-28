@@ -10,5 +10,7 @@ import java.util.Map;
 public interface ShopMapper {
     int goodsCount();
     int insert(Goods goods);
+    int update(Goods goods);
     List<Goods> goodsList(Map<String, Object> map);
+    Goods getGoods(Long goodsNo);
 }

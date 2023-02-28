@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,6 +24,7 @@ public class Goods {
 
     //
     private String changeYn;
+    private List<Long> fileNumList;
     private String imageUploadPath;
     private String thumbnailUploadPath;
 

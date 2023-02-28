@@ -70,28 +70,29 @@ public class FileUtils {
 
         for(MultipartFile file : files) {
             try {
-                // 파일 확장자
-                final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-
-                // 서버에 저장할 파일명 (랜덤 문자열 + 확장자)
-                final String saveName = getRandomString() + "." + extension;
-
-                // 업로드 경로에 파일 생성
-                File target = new File(uploadPath, saveName);
-                file.transferTo(target);
-
-                // 썸네일 생성
-                createThumbnailFile(target, saveName);
-
-                FileInfo fileInfo = new FileInfo();
-                fileInfo.setGoods_no(goodsNo);
-                fileInfo.setOriginal_name(file.getOriginalFilename());
-                fileInfo.setSave_name(saveName);
-                fileInfo.setSize(file.getSize());
-                fileInfo.setThumbnail_file("s_" + saveName);
-                fileInfo.setFileExtension(extension);
-
                 if(!file.getOriginalFilename().equals("")) {    // 비어있는 파일명 제외
+
+                    // 파일 확장자
+                    final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+
+                    // 서버에 저장할 파일명 (랜덤 문자열 + 확장자)
+                    final String saveName = getRandomString() + "." + extension;
+
+                    // 업로드 경로에 파일 생성
+                    File target = new File(uploadPath, saveName);
+                    file.transferTo(target);
+
+                    // 썸네일 생성
+                    createThumbnailFile(target, saveName);
+
+                    FileInfo fileInfo = new FileInfo();
+                    fileInfo.setGoods_no(goodsNo);
+                    fileInfo.setOriginal_name(file.getOriginalFilename());
+                    fileInfo.setSave_name(saveName);
+                    fileInfo.setSize(file.getSize());
+                    fileInfo.setThumbnail_file("s_" + saveName);
+                    fileInfo.setFileExtension(extension);
+
                     fileList.add(fileInfo);
                 }
             } catch (IOException e) {
@@ -154,11 +155,12 @@ public class FileUtils {
         String extension = "";
         String uploadDate = "";
         String uploadPath = "";
+        String imagePath = "";
         String thumbnailPath = "";
 
         for (Goods goods : goodsList) {
             // 게시글의 첨부 파일 모두 가져옴
-            fileList = fileInfoService.selectFileList(goods.getGoods_no().intValue());
+            fileList = fileInfoService.selectFileList(goods.getGoods_no());
 
             for (FileInfo file : fileList) {
                 // 파일 확장자 체크
@@ -168,18 +170,32 @@ public class FileUtils {
                 if(extension.equals("jpg") || extension.equals("png") || extension.equals("jpeg")) {
                     // 파일 저장 경로 찾기
                     uploadDate = file.getInsert_time().format(DateTimeFormatter.ofPattern("yyMMdd"));
-                    uploadPath = Paths.get("shop","image", uploadDate, file.getSave_name()).toString();
+                    uploadPath = Paths.get("C:", "develop", "shopImage", uploadDate).toString();
+
+                    // 출력 경로 지정
+                    imagePath = Paths.get("shop","image", uploadDate, file.getSave_name()).toString();
                     thumbnailPath = Paths.get("shop","image", uploadDate, file.getThumbnail_file()).toString();
 
-                    goods.setImageUploadPath(uploadPath);
-                    goods.setThumbnailUploadPath(thumbnailPath);
+                    File image = new File(uploadPath, file.getSave_name());
+                    File thumbnail = new File(uploadPath, file.getThumbnail_file());
+
+                    if(image.exists()) {
+                        goods.setImageUploadPath(imagePath);
+                    } else {
+                        goods.setImageUploadPath("../images/thumbnail.png");
+                    }
+
+                    if(thumbnail.exists()) {
+                        goods.setThumbnailUploadPath(thumbnailPath);
+                    } else {
+                        goods.setThumbnailUploadPath("../images/small_thumbnail.png");
+                    }
+
                     break;
                 } else {
                     // 이미지가 없는 경우 임시 이미지 출력
-                    uploadPath = "../images/thumbnail.png";
-                    thumbnailPath = "../images/small_thumbnail.png";
-                    goods.setImageUploadPath(uploadPath);
-                    goods.setThumbnailUploadPath(thumbnailPath);
+                    goods.setImageUploadPath("../images/thumbnail.png");
+                    goods.setThumbnailUploadPath("../images/small_thumbnail.png");
                 }
             }
         }   // end of for

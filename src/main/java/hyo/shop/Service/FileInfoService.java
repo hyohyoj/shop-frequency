@@ -18,18 +18,18 @@ public class FileInfoService {
         return fileInfoMapper.insertFile(fileList);
     }
 
-    public List<FileInfo> selectFileList(Integer board_no) {
-        return fileInfoMapper.selectFileList(board_no);
+    public List<FileInfo> selectFileList(Long goodsNo) {
+        return fileInfoMapper.selectFileList(goodsNo);
     }
 
     public FileInfo selectFileDetail(Long file_no) { return fileInfoMapper.selectFileDetail(file_no); }
 
-    public int deleteFile(Long board_no) {
-        return fileInfoMapper.deleteFile(board_no);
+    public int deleteFile(Long goodsNo) {
+        return fileInfoMapper.deleteFile(goodsNo);
     }
 
-    public int completeDeleteFile(Long board_no) {
-        return fileInfoMapper.completeDeleteFile(board_no);
+    public int completeDeleteFile(Long goodsNo) {
+        return fileInfoMapper.completeDeleteFile(goodsNo);
     }
 
     public int undeleteFile(List<Long> file_no) {

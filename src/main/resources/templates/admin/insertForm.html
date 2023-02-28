@@ -25,9 +25,9 @@
           let userId = $("#user_id").val();
           let desc = $("#goods_desc").val();
           let title = $("#goods_title").val();
-          let price = $("#goods_price").val();
+          let price = $("#goods_price").val().replaceAll(',', '');
           let stock = $("#goods_stock").val();
-          let frequency = $("#frequency_yn").val();
+          let frequency = $("input[id='frequency_yn']:checked").val();
 
           if(typeof price == 'undefined' || price == '' ) price = 0;
           if(typeof stock == 'undefined' || stock == '' ) stock = 0;
@@ -49,7 +49,7 @@
                   'goods_desc' : desc,
                   'goods_price' : price,
                   'goods_stock' : stock,
-                  'frequency_yn' : frequency,
+                  'frequency_yn' : (frequency) ? frequency : 'N',
                   'changeYn' : 'Y'
           }
           formData.append('goods', new Blob([JSON.stringify(data)], {type: 'application/json'}));
@@ -115,6 +115,18 @@
               }
           });
       }
+
+      $("#goods_price").on('keyup', function(e) {
+          let value = e.target.value;
+          value = Number(value.replaceAll(',', ''));
+
+          if(isNaN(value)) {         //NaN인지 판별 (문자열 입력)
+            $("#goods_price").val('0');
+          }else {                   //NaN이 아닌 경우
+            const formatValue = value.toLocaleString('ko-KR');
+            $("#goods_price").val(formatValue);
+          }
+      });
 
   })
 
@@ -184,7 +196,7 @@
     <br>
     <div>
         <label for="goods_price">가격 : </label>
-        <input style="width: 120px; text-align:right;" type="number" min="0" id="goods_price" name="goods_price" value="0" /><span>원</span>
+        <input style="width: 120px; text-align:right;" type="text" id="goods_price" name="goods_price" value="0" /><span>원</span>
     </div>
     <br>
     <div>

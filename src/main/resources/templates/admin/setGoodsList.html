@@ -3,8 +3,9 @@
 <html lang="ko">
 <body>
 <tr style='cursor:pointer;' th:each="goods, status : ${goodsList}">
+    <!-- 총 개수 - ( ((현재페이지 - 1) * 화면당 게시글 로우행 수) + 로우인덱스) -->
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|"
-        th:text="${searchInfo.pagination.totalRecordCount - (((searchInfo.page - 1) * 10) + status.index)}"></td>
+        th:text="${searchInfo.pagination.totalRecordCount - (((searchInfo.page - 1) * searchInfo.recordSize) + status.index)}"></td>
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|">
         <div>
             <img th:src="${goods.thumbnailUploadPath}" style="width: 100px;">
@@ -18,9 +19,21 @@
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|"
         th:text="${#strings.arraySplit(goods.insert_date, 'T')[0] + ' ' + #strings.arraySplit(goods.insert_date, 'T')[1]}"></td>
 </tr>
-<ul id="pagingul">
-</ul>
-<!--페이징 뷰단-->
+<!--페이징-->
+<th:block th:if="${searchInfo.pagination.existPrevPage}">
+    <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${searchInfo.pagination.startPage - 1});|" class="page_bt first">이전</a></li>
+</th:block>
+<th:block th:each="page : ${#numbers.sequence(searchInfo.pagination.startPage, searchInfo.pagination.endPage)}">
+    <th:block th:if="${page == searchInfo.page}">
+        <li class='on'><a href="javascript:void(0);" th:onclick="|getGoodsList(${page});|" th:text="${page}"></a></li>
+    </th:block>
+    <th:block th:unless="${page == searchInfo.page}">
+        <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${page});|" th:text="${page}"></a></li>
+    </th:block>
+</th:block>
+<th:block th:if="${searchInfo.pagination.existNextPage}">
+    <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${searchInfo.pagination.endPage + 1});|" class="page_bt first">다음</a></li>
+</th:block>
 <!--if(pagination.existPrevPage) {-->
 <!--<li><a href="javascript:void(0);" th:onclick="|selectList(${(pagination.startPage - 1), type_no})|" class="page_bt first">이전</a></li>-->
 <!--}-->
