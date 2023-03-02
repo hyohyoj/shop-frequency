@@ -21,11 +21,15 @@ public class Goods {
     private String frequency_yn;
     private String insert_user_id;
     private LocalDateTime insert_date;
+    private Long option_no;
 
     //
     private String changeYn;
     private List<Long> fileNumList;
+    private String formatPrice; // 가격 콤마 표시
     private String imageUploadPath;
     private String thumbnailUploadPath;
+    private List<String> imagePathArray;
+    private List<String> thumbnailPathArray;
 
 }

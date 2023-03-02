@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,7 @@ public class AdminController {
         Goods goods = mapper.convertValue(map.get("goodsInfo"), Goods.class);
 
         Map<String, Object> searchMap = new HashMap<>();
+        DecimalFormat formatter = new DecimalFormat("###,###");
 
         try{
             int goodsCount = shopService.goodsCount();
@@ -208,6 +210,11 @@ public class AdminController {
 
             List<Goods> goodsList = shopService.goodsList(searchMap);
             goodsList = fileUtils.setImageUploadPath(goodsList);    // 출력 이미지 경로 지정
+
+            for (Goods g : goodsList) {
+                int price = g.getGoods_price();
+                g.setFormatPrice(formatter.format(price));
+            }
 
             mv.setViewName("/admin/setGoodsList");
             mv.addObject("goodsList", goodsList);                   // 상품 목록

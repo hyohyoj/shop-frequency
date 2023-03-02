@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
 </head>
 
 <script th:inline="javascript">
@@ -100,27 +103,20 @@
     <hr class="my-4">
 </form>
 <div class="row">
-    <div class="col">
-        <input id="submit" type="submit" value="로그인" />
-    </div>
+    <input id="submit" type="submit" value="로그인" />
     <th:block th:if="${#strings.equals(path, '/login')}">
-        <div class="col">
-            <button id="signUp" type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
-        </div>
+        <button id="signUp" type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
     </th:block>
-    <div class="col">
-        <th:block th:if="${#strings.equals(path,'/admin/login')}">
-            <button onclick="location.href='items.html'"
-                    th:onclick="|location.href='@{/admin}'|"
-                    type="button">취소</button>
-        </th:block>
-        <th:block th:unless="${#strings.equals(path,'/admin/login')}">
-            <button onclick="location.href='items.html'"
-                    th:onclick="|location.href='@{/}'|"
-                    type="button">취소</button>
-        </th:block>
-
-    </div>
+    <th:block th:if="${#strings.equals(path,'/admin/login')}">
+        <button onclick="location.href='items.html'"
+                th:onclick="|location.href='@{/admin}'|"
+                type="button">취소</button>
+    </th:block>
+    <th:block th:unless="${#strings.equals(path,'/admin/login')}">
+        <button onclick="location.href='items.html'"
+                th:onclick="|location.href='@{/}'|"
+                type="button">취소</button>
+    </th:block>
 </div>
 </body>
 </html>

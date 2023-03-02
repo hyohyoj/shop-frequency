@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 상세</title>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/plugin/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="/plugin/slick/slick-theme.css"/>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/plugin/slick/slick.js"></script>
+</head>
+<style>
+$wh : #ffffff;
+$bk : #000000;
+$pt :#ffc0cb;
+
+.slick-arrow {
+    width: 50px;
+    height: 50px;
+    background: rgba($bk, 0.2);
+    border-radius: 50%;
+    transition: background 0.5s;
+}
+.slick-arrow:hover {
+    background: rgba($pt, 0.9);
+}
+.slick-arrow:hover:before {
+    background: rgba($pt, 0.9);
+}
+.slick-arrow:before {
+    transition: all 0.5s;
+}
+
+.slick-prev {
+    left: 25px !important;
+    z-index: 9;
+}
+
+.slick-next {
+    right: 25px !important;
+    z-index: 9;
+}
+</style>
+<script th:inline="javascript">
+
+    $(function(){
+        $('#slider-div').slick({
+            slidesToShow : 1,		// 한 화면에 보여질 컨텐츠 개수
+            slidesToScroll : 1,		//스크롤 한번에 움직일 컨텐츠 개수
+            arrows : true, 		// 옆으로 이동하는 화살표 표시 여부
+            dots : true, 		// 스크롤바 아래 점으로 페이지네이션 여부
+            autoplay : true,			// 자동 스크롤 사용 여부
+            autoplaySpeed : 4000, 		// 자동 스크롤 시 다음으로 넘어가는데 걸리는 시간 (ms)
+            pauseOnHover : true,		// 슬라이드 이동	시 마우스 호버하면 슬라이더 멈추게 설정
+            vertical : false,		// 세로 방향 슬라이드 옵션
+            prevArrow : "<button type='button' class='slick-prev'>Previous</button>",		// 이전 화살표 모양 설정
+            nextArrow : "<button type='button' class='slick-next'>Next</button>",		// 다음 화살표 모양 설정
+            dotsClass : "slick-dots", 	//아래 나오는 페이지네이션(점) css class 지정
+            draggable : true, 	//드래그 가능 여부
+        });
+    })
+
+    $(document).ready(function () {
+        $("#addQuantity").on("click", function() {
+            let total = $("#goodsQuantity").val();
+            total++;
+            $("#goodsQuantity").val(total);
+        });
+
+        $("#removeQuantity").on("click", function() {
+            let total = $("#goodsQuantity").val();
+
+            if(total <= 1) {
+                alert("수량은 1개 이상이여야 합니다.");
+                $("#goodsQuantity").val('1');
+                return false;
+            }
+
+            total--;
+            $("#goodsQuantity").val(total);
+        });
+
+        $("#goodsQuantity").on("keyup", function(e) {
+        });
+
+        $("#cartBtn").on("click", function() {
+
+            if($("#goodsQuantity").val() < 1) {
+                alert("수량은 1개 이상이여야 합니다.");
+                $("#goodsQuantity").val('1');
+                return false;
+            }
+
+            let params = {
+                'goods_no' : $("#goods_no").val(),
+                'option_no' : $("#option_no").val() ? $("#option_no").val() : null,
+            }
+
+            $.ajax({
+                type : "POST",
+                url : "/shop/cart",
+                dataType:"text",
+                contentType : 'application/json; charset=utf-8',
+                data : JSON.stringify(params),
+                success : function(data){
+                    if(parseInt(data) == 1) {
+                        alert("장바구니에 추가되었습니다.");
+                    } else if(parseInt(data) == 2) {
+                        alert("해당 상품이 장바구니에 존재합니다.");
+                    }
+                }
+            });
+        })
+
+    })
+
+</script>
+<body>
+
+<input type="hidden" id="goods_no" th:value="${goods.goods_no}" />
+<input type="hidden" id="option_no" th:value="${goods.option_no}" />
+
+<div class="content-area">
+    <div class="content-top">
+        <div class="ct-left-area">
+            <div class="image-wrap">
+                <!-- slick-slider -->
+                <div id="slider-div">
+                    <th:block th:each="img, status : ${goods.imagePathArray}">
+                        <div><img th:src="${img}" /></div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+        <div class="ct-right-area">
+            <div class="title">
+                <h1 th:text="${goods.goods_title}"></h1>
+            </div>
+            <hr>
+            <div class="desc">
+                <span th:text="${goods.goods_desc}">상품설명</span>
+            </div>
+            <hr>
+            <div class="frequency-yn">
+                <th:block th:if="${#strings.equals(goods.frequency_yn, 'Y')}">
+                    <span>※ <span style="color:darkolivegreen;"><b>프리퀀시</b></span> 적용 상품입니다.<span style="font-size: 20px;">🙆</span></span>
+                </th:block>
+                <th:block th:unless="${#strings.equals(goods.frequency_yn, 'Y')}">
+                    <span>※ <span style="color:darkolivegreen;"><b>프리퀀시</b></span> 적용 상품이 아닙니다.<span style="font-size: 20px;">🙅</span></span>
+                </th:block>
+            </div>
+            <hr>
+            <div class="price">
+                <span th:text="|${goods.formatPrice}원|"></span>
+            </div>
+            <hr>
+            <div class="button">
+                <div class="button-quantity">
+                    주문수량
+                    <input id="goodsQuantity" type="text" value="1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">  <!-- 숫자만 입력 가능하게 정규식 처리 -->
+                    <span>
+                        <button id="addQuantity">+</button>
+                        <button id="removeQuantity">-</button>
+                    </span>
+                </div>
+                <div class="button-set">
+                    <a href="#" id="cartBtn" class="btn-cart">장바구니 담기</a>
+                    <a href="#" class="btn-buy">바로구매</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

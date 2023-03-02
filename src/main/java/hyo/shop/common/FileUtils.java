@@ -145,7 +145,7 @@ public class FileUtils {
     }
 
     /**
-     * 이미지 출력 경로 지정해주는 함수
+     * 상품 목록 이미지 출력 경로 지정해주는 함수
      * @param goodsList    - 상품 리스트
      * @return 상품 리스트
      */
@@ -173,8 +173,8 @@ public class FileUtils {
                     uploadPath = Paths.get("C:", "develop", "shopImage", uploadDate).toString();
 
                     // 출력 경로 지정
-                    imagePath = Paths.get("shop","image", uploadDate, file.getSave_name()).toString();
-                    thumbnailPath = Paths.get("shop","image", uploadDate, file.getThumbnail_file()).toString();
+                    imagePath = Paths.get("\\image", uploadDate, file.getSave_name()).toString();
+                    thumbnailPath = Paths.get("\\image", uploadDate, file.getThumbnail_file()).toString();
 
                     File image = new File(uploadPath, file.getSave_name());
                     File thumbnail = new File(uploadPath, file.getThumbnail_file());
@@ -201,6 +201,65 @@ public class FileUtils {
         }   // end of for
 
         return goodsList;
+    }
+
+    /**
+     * 상품 상세 이미지 출력 경로 리스트를 지정해주는 함수
+     * @param goods   - 상품
+     * @return 상품
+     */
+    public Goods setImagePathArray(Goods goods) {
+        List<FileInfo> fileList = null;
+
+        String extension = "";
+        String uploadDate = "";
+        String uploadPath = "";
+        String imagePath = "";
+        String thumbnailPath = "";
+
+        List<String> imagePathArray = new ArrayList<>();
+        List<String> thumbnailPathArray = new ArrayList<>();
+
+        fileList = fileInfoService.selectFileList(goods.getGoods_no());
+
+        for (FileInfo file : fileList) {
+            // 파일 확장자 체크
+            extension = FilenameUtils.getExtension(file.getOriginal_name());
+
+            // 파일이 이미지인 경우
+            if(extension.equals("jpg") || extension.equals("png") || extension.equals("jpeg")) {
+                // 파일 저장 경로 찾기
+                uploadDate = file.getInsert_time().format(DateTimeFormatter.ofPattern("yyMMdd"));
+                uploadPath = Paths.get("C:", "develop", "shopImage", uploadDate).toString();
+
+                // 출력 경로 지정
+                imagePath = Paths.get("\\image", uploadDate, file.getSave_name()).toString();
+                thumbnailPath = Paths.get("\\image", uploadDate, file.getThumbnail_file()).toString();
+
+                File image = new File(uploadPath, file.getSave_name());
+                File thumbnail = new File(uploadPath, file.getThumbnail_file());
+
+                if(image.exists()) {
+                    imagePathArray.add(imagePath);
+                } else {
+                    imagePathArray.add("../images/thumbnail.png");
+                }
+
+                if(thumbnail.exists()) {
+                    thumbnailPathArray.add(thumbnailPath);
+                } else {
+                    thumbnailPathArray.add("../images/small_thumbnail.png");
+                }
+            } else {
+                // 이미지가 없는 경우 임시 이미지 출력
+                imagePathArray.add("../images/thumbnail.png");
+                thumbnailPathArray.add("../images/small_thumbnail.png");
+            }
+        }
+        goods.setImagePathArray(imagePathArray);
+        goods.setThumbnailPathArray(thumbnailPathArray);
+
+        return goods;
     }
 
     public void createThumbnailFile(File saveFile, String saveName) throws IOException {

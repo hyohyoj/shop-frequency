@@ -19,10 +19,11 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     // session 만료 시 redirect 시키는 인터셉터 추가
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor())
-                .addPathPatterns("/shop/**");
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(new LoginInterceptor())
+//                .addPathPatterns("/shop/**")
+//                .excludePathPatterns("/shop/getGoodsList");
+//    }
 
 }

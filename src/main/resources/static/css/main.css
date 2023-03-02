@@ -1,0 +1,189 @@
+/* 메인 상품 목록 css */
+article {
+    height: 100%;
+    width: 1027px;
+    /*margin: 0 auto;*/
+    padding-bottom: 12px;
+}
+
+#product-list {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.product-card {
+    width: 180px;
+    height: 300px;
+    margin-right: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgb(170, 170, 170);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.product-img {
+    width: 100%;
+    height: 217px;
+    border-radius: 12px 12px 0 0;
+}
+
+.product-contents {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+}
+
+.product-name {
+    font-size: 15px;
+}
+
+.product-price {
+    font-size: 16px;
+    font-weight: 600;
+}
+/* 메인 상품 목록 css */
+
+
+
+/* 상품 상세 css */
+.content-top {
+    width: 100%;
+    height: 400px;
+}
+
+.content-top:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.ct-left-area {
+    float: left;
+    width: 30%;
+    height: 100%;
+}
+    .image-wrap {
+        height: 90%;
+        width: 90%;
+        margin: auto;
+        top: 15%;
+        position: relative;
+    }
+    .image-wrap img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+.ct-right-area {
+    float: left;
+    width: 70%;
+    height: 100%;
+}
+    .title {
+        height: 25%;
+        font-size: 17px;
+        line-height: 110px;
+        padding-left: 3%;
+    }
+    .desc {
+        font-size: 16px;
+        line-height: 50px;
+        padding-left: 3%;
+        background-color: #d3d3d35e;
+        border-radius: 10px;
+    }
+    .frequency-yn {
+        font-size: 16px;
+        line-height: 50px;
+        padding-left: 3%;
+    }
+    .price {
+        line-height: 30px;
+        padding: 1% 0 1% 3%;
+    }
+    .button {
+        padding: 2% 0 2% 3%;
+    }
+        .button-quantity {
+            margin-bottom: 2%;
+        }
+        .button-quantity input {
+            height: 26px;
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .button-quantity button {
+            border: 1px solid #aaa;
+            color: darkolivegreen;
+            width: 20px;
+            height: 20px;
+            padding: 3px;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 15px;
+        }
+        .btn-cart {
+            display: inline-block;
+            width: 140px;
+            text-align: center;
+            height: 50px;
+            line-height: 50px;
+            background-color: #7d915a;
+            border: 1px solid #7d915a;
+            color: #fff;
+            margin-right: 2px;
+            text-decoration: none;
+        }
+        .btn-buy{
+            display: inline-block;
+            width: 140px;
+            text-align: center;
+            height: 50px;
+            line-height: 50px;
+            background-color: darkolivegreen;
+            border: 1px solid darkolivegreen;
+            color: #fff;
+            text-decoration: none;
+        }
+/* 상품 상세 css */
+
+
+
+/* 페이징 css */
+#pagingul {
+    text-align: center;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-right: 0;
+    padding-left :0;
+}
+#pagingul li {
+    text-align: center;
+    float: left;
+    list-style:none;
+
+}
+
+#pagingul li a {
+    display: block;
+    font-size: 14px;
+    color: black;
+    padding: 9px 12px;
+    border-right: solid 1px #ccc;
+    box-sizing: border-box;
+    text-decoration-line:none;
+}
+
+#pagingul li.on {
+    /*background: #eda712;*/
+    background: darkolivegreen;
+}
+
+#pagingul li.on a {
+    color: #fff;
+}
+/* 페이징 css */

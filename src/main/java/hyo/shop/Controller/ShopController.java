@@ -1,27 +1,34 @@
 package hyo.shop.Controller;
 
-import hyo.shop.Service.FileInfoService;
-import hyo.shop.domain.FileInfo;
-import hyo.shop.domain.Goods;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hyo.shop.Service.CartService;
+import hyo.shop.Service.ShopService;
+import hyo.shop.common.FileUtils;
+import hyo.shop.common.SessionConstants;
+import hyo.shop.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.WebUtils;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/shop/**")
@@ -29,22 +36,133 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShopController {
 
-    private final FileInfoService fileInfoService;
+    private final ShopService shopService;
+    private final CartService cartService;
+    private final FileUtils fileUtils;
 
-    // 이미지 출력
-    @GetMapping(value = "/image/{uploaddate}/{imagename}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
-    public ResponseEntity<byte[]> imageSearch(
-            @PathVariable("imagename") String imagename,
-            @PathVariable("uploaddate") String uploaddate) throws IOException
+    // ModelAndView 형태로 데이터가 세팅 된 뷰를 반환
+    @PostMapping("/getGoodsList")
+    @ResponseBody
+    public ModelAndView getGoodsList(
+            @RequestBody Map<String, Object> map,      // JSON 형식으로 받아옴
+            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
+            HttpServletResponse response)
     {
-        String uploadPath = Paths.get("C:", "develop", "shopImage", uploaddate, imagename).toString();
+        ModelAndView mv = new ModelAndView("jsonView"); // json 형태로 데이터 전송
 
-        InputStream imageStream = new FileInputStream(uploadPath);
-        byte[] imageByteArray = IOUtils.toByteArray(imageStream);
-        imageStream.close();
+        ObjectMapper mapper = new ObjectMapper();
 
-        return new ResponseEntity<byte[]>(imageByteArray, HttpStatus.OK);
+        SearchInfo searchInfo = mapper.convertValue(map.get("searchInfo"), SearchInfo.class);
+        Goods goods = mapper.convertValue(map.get("goodsInfo"), Goods.class);
 
+//        response.setContentType("text/html;charset=UTF-8");
+//        Cookie pageCookie = new Cookie("page", Integer.toString(searchInfo.getPage()));
+//        pageCookie.setPath("/");
+//        response.addCookie(pageCookie);
+
+        Map<String, Object> searchMap = new HashMap<>();
+        DecimalFormat formatter = new DecimalFormat("###,###");
+
+        try{
+            int goodsCount = shopService.goodsCount();
+            Pagination pagination = new Pagination(goodsCount, searchInfo);
+
+            searchInfo.setPagination(pagination);
+
+            searchMap.put("goodsVo", goods);
+            searchMap.put("searchVo", searchInfo);
+
+            List<Goods> goodsList = shopService.goodsList(searchMap);
+            goodsList = fileUtils.setImageUploadPath(goodsList);    // 출력 이미지 경로 지정
+
+            for (Goods g : goodsList) {
+                int price = g.getGoods_price();
+                g.setFormatPrice(formatter.format(price));
+            }
+
+            mv.setViewName("/shop/setGoodsList");
+            mv.addObject("goodsList", goodsList);                   // 상품 목록
+            if(loginMember != null) {
+                mv.addObject("sessionId", loginMember.getUser_id());    // 세션 아이디
+            }
+            mv.addObject("searchInfo", searchInfo);                 // 페이징 정보
+        } catch (Exception e) {
+            System.out.println(e + " : 에러 발생");
+            mv.setViewName("/error");
+            return mv;
+        }
+
+        return mv;
+    }
+
+    @GetMapping("/goodsDetail")
+    public ModelAndView goodsDetail(
+            @RequestParam(value = "goods_no") Long goodsNo)
+    {
+        ModelAndView mv = new ModelAndView("jsonView"); // json 형태로 데이터 전송
+        DecimalFormat formatter = new DecimalFormat("###,###");
+
+        Goods goods = shopService.getGoods(goodsNo);
+        goods = fileUtils.setImagePathArray(goods);     // 출력 이미지 경로 지정
+
+        int price = goods.getGoods_price();
+        goods.setFormatPrice(formatter.format(price));
+
+        mv.setViewName("/shop/goodsDetail");
+        mv.addObject("goods", goods);
+
+        return mv;
+    }
+
+    @PostMapping("/cart")
+    @ResponseBody
+    public int cart(@RequestBody Cart cart,
+                    @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
+                    HttpServletRequest request, HttpServletResponse response)
+    {
+        Cookie cookie = WebUtils.getCookie(request, "cartCookie");
+
+        // 비회원 장바구니 첫 추가 시 쿠키 생성
+        if(cookie == null && loginMember == null) {
+            String ckid = RandomStringUtils.random(6, true, true);
+
+            Cookie cartCookie = new Cookie("cartCookie", ckid);
+            cartCookie.setPath("/");
+            cartCookie.setMaxAge(60 * 60 * 24 * 1);     // 쿠키 제한시간 1일
+            response.addCookie(cartCookie);
+
+            cart.setCart_ckid(ckid);
+            cartService.cartInsert(cart);
+        }
+        // 비회원 장바구니 쿠키 생성 후 상품 추가
+        else if(cookie != null && loginMember == null) {
+            String ckValue = cookie.getValue();
+            cart.setCart_ckid(ckValue);
+
+            // 장바구니 중복 확인
+            if(cartService.cartCheck(cart) != 0) {
+                return 2;
+            }
+
+            // 상품 추가 시 쿠키 시간 연장
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60 * 24 * 1);
+            response.addCookie(cookie);
+
+            //insert
+        }
+        // 회원 장바구니 상품 추가
+        else if(loginMember != null) {
+            cart.setUser_id(loginMember.getUser_id());
+
+            // 장바구니 중복 확인
+            if(cartService.cartCheck(cart) != 0) {
+                return 2;
+            }
+
+            cartService.cartInsert(cart);
+        }
+        return 1;
     }
 
 //        // 프리퀀시

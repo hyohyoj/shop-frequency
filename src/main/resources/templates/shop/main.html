@@ -4,13 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <title>쇼핑몰 메인</title>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.cookie.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
 </head>
+
+<script th:inline="javascript">
+
+    // 저장된 페이지 값 불러옴
+    let pageCookie = $.cookie('page-user');
+
+    function getGoodsList(page) {
+
+        let params = {
+            'searchInfo' : {
+                'page' : (page) ? page : 1,
+                'recordSize' : 10,
+                'pageSize' : 10
+            },
+            'goodsInfo' : {
+                'insert_user_id' : [[${session.loginMember?.user_id}]]
+            }
+        }
+
+        $.ajax({
+            type : "POST",
+            url : "/shop/getGoodsList",
+            dataType:"text",
+            contentType : 'application/json; charset=utf-8',
+            data : JSON.stringify(params),
+            success : function(data){
+                  let product = data.split('<!--페이징-->')[0];
+                  let paging = data.split('<!--페이징-->')[1];
+
+                  // 초기화
+                  $("#productBody").empty();
+                  $("#pagingul").empty();
+
+                  $("#productBody").html(product);
+                  $("#pagingul").html(paging);
+
+                  // 페이지 값 저장
+                  $.cookie('page-user', page);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        getGoodsList(pageCookie);
+    })
+
+</script>
 <body>
-<h1 th:text="|${session.loginMember.user_id}님 안녕하세요!|">로그인 사용자 이름</h1>
-<form th:action="@{/logout}" method="post">
-    <button onclick="location.href='items.html'" type="submit">
-        로그아웃
+
+<th:block th:if="${#strings.isEmpty(session.loginMember)}">
+    <h1>쇼핑몰 홈</h1>
+    <button onclick="location.href='items.html'"
+            th:onclick="|location.href='@{/login}'|" type="button">
+        로그인
     </button>
-</form>
+    <button id="signUp" type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
+</th:block>
+<th:block th:unless="${#strings.isEmpty(session.loginMember)}">
+    <h1 th:text="|${session.loginMember?.user_id}님 안녕하세요!|">로그인 사용자 이름</h1>
+    <form th:action="@{/logout}" method="post">
+        <button onclick="location.href='items.html'" type="submit">
+            로그아웃
+        </button>
+    </form>
+</th:block>
+<hr>
+<article id="productBody">
+
+</article>
+<ul id="pagingul">
+</ul>
+
 </body>
 </html>

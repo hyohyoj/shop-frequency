@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Admin Home</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="/js/jquery.cookie.js"></script>
 </head>
 <style>
     table {
@@ -47,12 +48,15 @@
 </style>
 <script th:inline="javascript">
 
+    // 저장된 페이지 값 불러옴
+    let pageCookie = $.cookie('page-admin');
+
     function getGoodsList(page) {
 
         let params = {
             'searchInfo' : {
                 'page' : (page) ? page : 1,
-                'recordSize' : 10,
+                'recordSize' : 5,
                 'pageSize' : 10
             },
             'goodsInfo' : {
@@ -77,6 +81,9 @@
 
                   $("#dataTableBody").html(table);
                   $("#pagingul").html(paging);
+
+                  // 페이지 값 저장
+                  $.cookie('page-admin', page);
             }
         });
     }
@@ -97,19 +104,19 @@
             });
         }
 
-        getGoodsList();
+        getGoodsList(pageCookie);
         //getUserList();
     })
 </script>
 
 <body>
 <h1 th:text="|${session.loginMember.user_id} 관리자님 안녕하세요!|">로그인 사용자 이름</h1>
-<form th:action="@{/admin/logout}" method="post">
+<form th:action="@{/admin/logout}" method="post" style="display:inline-block;">
     <button onclick="location.href='items.html'" type="submit">
         로그아웃
     </button>
 </form>
-<form th:action="@{/admin/insertForm}" method="get">
+<form th:action="@{/admin/insertForm}" method="get" style="display:inline-block;">
     <button onclick="location.href='items.html'" type="submit">
         상품 생성
     </button>

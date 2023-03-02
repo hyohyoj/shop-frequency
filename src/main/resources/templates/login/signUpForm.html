@@ -4,7 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <title>SignUp</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
 </head>
 
 <script th:inline="javascript">
@@ -114,7 +117,7 @@
            th:errorclass="field-error">
   </div>
   <span style="color:gray;">아이디의 첫 글자는 영문 소문자이고, 영문 소문자와 숫자를 가진 3~20자리 문자열이어야 합니다.</span>
-  <br>
+  <br><br>
   <div>
     <label for="user_pw">비밀번호</label>
     <input type="password" id="user_pw" th:field="*{user_pw}" class="form-control"
@@ -125,14 +128,10 @@
   <hr class="my-4">
 </form>
 <div class="row">
-  <div class="col">
     <button id="signUp" type="button">가입하기</button>
-  </div>
-  <div class="col">
     <button onclick="location.href='items.html'"
             th:onclick="|location.href='@{/}'|"
             type="button">취소</button>
-  </div>
 </div>
 </body>
 </html>

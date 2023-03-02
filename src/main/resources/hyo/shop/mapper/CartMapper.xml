@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hyo.shop.mapper.CartMapper">
+
+    <select id="cartCheck" parameterType="hyo.shop.domain.Cart" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            cart_info
+        WHERE
+            <if test="user_id == null or user_id == ''">
+                cart_ckid = #{cart_ckid}
+            </if>
+            <if test="user_id != null and user_id != ''">
+                user_id = #{user_id}
+            </if>
+        AND
+            goods_no = #{goods_no}
+    </select>
+
+    <insert id="cartInsert" parameterType="hyo.shop.domain.Cart">
+        INSERT INTO cart_info(
+            <if test="user_id == null or user_id == ''">
+                 cart_ckid
+            </if>
+            <if test="user_id != null and user_id != ''">
+                 user_id
+            </if>
+                ,goods_no
+            <if test="option_no != null">
+                ,option_no
+            </if>
+                ,cart_cklimit
+        )
+        VALUES(
+            <if test="user_id == null or user_id == ''">
+                 #{cart_ckid}
+            </if>
+            <if test="user_id != null and user_id != ''">
+                 #{user_id}
+            </if>
+                ,#{goods_no}
+            <if test="option_no != null">
+                ,#{option_no}
+            </if>
+                ,CURRENT_TIMESTAMP
+        )
+    </insert>
+
+</mapper>

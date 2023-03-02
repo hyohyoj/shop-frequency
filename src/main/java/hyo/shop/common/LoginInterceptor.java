@@ -24,7 +24,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
             if(loginMember == null) {
                 mv.addObject("msg", "세션이 만료되어 로그아웃 되었습니다.");
-                mv.addObject("url", "/login");
+                mv.addObject("url", "/");
                 throw new ModelAndViewDefiningException(mv);
             } else {
                 return true;
@@ -32,7 +32,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         } catch (Exception e) {
             mv.addObject("msg", "세션이 만료되어 로그아웃 되었습니다.");
-            mv.addObject("url", "/login");
+            mv.addObject("url", "/");
             throw new ModelAndViewDefiningException(mv);
         }
 

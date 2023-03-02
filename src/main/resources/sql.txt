@@ -1,0 +1,51 @@
+use shop_db;
+
+create table user_info (
+	user_id varchar(50) not null primary key,
+    user_pw varchar(100)
+);
+alter table user_info add column auth_code varchar(50) default null;
+
+create table goods_info (
+	goods_no int not null auto_increment primary key,
+    goods_title varchar(100),
+    goods_desc varchar(150),
+    goods_price int,
+    goods_stock int default 0,
+    frequency_yn char(1),
+    insert_user_id varchar(50) not null,
+    insert_date datetime default current_timestamp
+);
+
+create table file_info (
+	file_no int not null auto_increment primary key,
+    goods_no int not null,
+    original_name varchar(500) not null,
+    save_name varchar(200) not null,
+    size int not null,
+    thumbnail_file varchar(200) not null,
+    delete_yn char(1) not null default 'N',
+    insert_time datetime default current_timestamp,
+    delete_time datetime,
+    foreign key (goods_no) references goods_info(goods_no)
+);
+
+create table cart_info (
+	cart_no int not null auto_increment primary key,
+    user_id varchar(50),
+    goods_no int not null,
+    option_no int,
+    cart_cklimit datetime default current_timestamp,
+    cart_ckid varchar(20)
+);
+
+select * from user_info;
+select * from goods_info;
+select * from cart_info;
+select * from file_info;
+
+update goods_info set frequency_yn = 'N' where goods_no = 9;
+
+delete from user_info;
+delete from goods_info where goods_no in (11, 12);
+delete from file_info where file_no in (11, 12);

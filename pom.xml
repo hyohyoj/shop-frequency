@@ -98,6 +98,19 @@
 			<artifactId>thumbnailator</artifactId>
 			<version>0.4.13</version>
 		</dependency>
+		<!--기본 org.json  -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20180813</version>
+		</dependency>
+		<!-- RandomStringUtils 사용을 위해 선언 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<body>
+<div id="product-list">
+    <th:block th:each="goods, status : ${goodsList}">
+        <div class="product-card" th:onclick="|location.href='@{/shop/goodsDetail( goods_no = ${goods.goods_no} )}'|">
+            <div>
+                <img class="product-img" th:src="${goods.thumbnailUploadPath}" />
+            </div>
+            <div class="product-contents">
+                <span class="product-name" th:utext="${goods.goods_title}"></span>
+                <span class="product-price" th:text="${goods.formatPrice}"></span>
+            </div>
+        </div>
+    </th:block>
+</div>
+<!--페이징-->
+<th:block th:if="${searchInfo.pagination.existPrevPage}">
+    <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${searchInfo.pagination.startPage - 1});|" class="page_bt first">이전</a></li>
+</th:block>
+<th:block th:each="page : ${#numbers.sequence(searchInfo.pagination.startPage, searchInfo.pagination.endPage)}">
+    <th:block th:if="${page == searchInfo.page}">
+        <li class='on'><a href="javascript:void(0);" th:onclick="|getGoodsList(${page});|" th:text="${page}"></a></li>
+    </th:block>
+    <th:block th:unless="${page == searchInfo.page}">
+        <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${page});|" th:text="${page}"></a></li>
+    </th:block>
+</th:block>
+<th:block th:if="${searchInfo.pagination.existNextPage}">
+    <li><a href="javascript:void(0);" th:onclick="|getGoodsList(${searchInfo.pagination.endPage + 1});|" class="page_bt first">다음</a></li>
+</th:block>
+</body>
+</html>

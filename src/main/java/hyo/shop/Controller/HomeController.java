@@ -8,7 +8,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.SessionAttribute;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -28,11 +27,6 @@ public class HomeController {
     public String index(@SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
                         Model model)
     {
-        // 세션에 회원 데이터가 없으면 홈으로 이동
-        if (loginMember == null) {
-            return "index";
-        }
-
         return "/shop/main";
     }
 
