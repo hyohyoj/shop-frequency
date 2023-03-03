@@ -97,12 +97,13 @@ $pt :#ffc0cb;
 
             let params = {
                 'goods_no' : $("#goods_no").val(),
+                'goods_quantity' : $("#goodsQuantity").val(),
                 'option_no' : $("#option_no").val() ? $("#option_no").val() : null,
             }
 
             $.ajax({
                 type : "POST",
-                url : "/shop/cart",
+                url : "/shop/cartInsert",
                 dataType:"text",
                 contentType : 'application/json; charset=utf-8',
                 data : JSON.stringify(params),
@@ -155,7 +156,7 @@ $pt :#ffc0cb;
             </div>
             <hr>
             <div class="price">
-                <span th:text="|${goods.formatPrice}원|"></span>
+                <span th:text="|${#numbers.formatInteger(goods.goods_price, 3, 'COMMA')}원|"></span>
             </div>
             <hr>
             <div class="button">
@@ -168,8 +169,8 @@ $pt :#ffc0cb;
                     </span>
                 </div>
                 <div class="button-set">
-                    <a href="#" id="cartBtn" class="btn-cart">장바구니 담기</a>
-                    <a href="#" class="btn-buy">바로구매</a>
+                    <a style="cursor: pointer;" id="cartBtn" class="btn-cart">장바구니 담기</a>
+                    <a style="cursor: pointer;" class="btn-buy">바로구매</a>
                 </div>
             </div>
         </div>

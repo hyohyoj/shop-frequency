@@ -66,15 +66,17 @@
             th:onclick="|location.href='@{/login}'|" type="button">
         로그인
     </button>
-    <button id="signUp" type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
+    <button type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
+    <button type="button" th:onclick="|location.href='@{/shop/cartSelect}'|">장바구니</button>
 </th:block>
 <th:block th:unless="${#strings.isEmpty(session.loginMember)}">
     <h1 th:text="|${session.loginMember?.user_id}님 안녕하세요!|">로그인 사용자 이름</h1>
-    <form th:action="@{/logout}" method="post">
+    <form th:action="@{/logout}" method="post" style="display: inline-block;">
         <button onclick="location.href='items.html'" type="submit">
             로그아웃
         </button>
     </form>
+    <button type="button" th:onclick="|location.href='@{/shop/cartSelect}'|">장바구니</button>
 </th:block>
 <hr>
 <article id="productBody">

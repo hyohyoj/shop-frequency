@@ -10,7 +10,7 @@
             </div>
             <div class="product-contents">
                 <span class="product-name" th:utext="${goods.goods_title}"></span>
-                <span class="product-price" th:text="${goods.formatPrice}"></span>
+                <span class="product-price" th:text="|${#numbers.formatInteger(goods.goods_price, 3, 'COMMA')}원|"></span>
             </div>
         </div>
     </th:block>

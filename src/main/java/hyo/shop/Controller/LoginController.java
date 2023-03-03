@@ -1,7 +1,9 @@
 package hyo.shop.Controller;
 
+import hyo.shop.Service.CartService;
 import hyo.shop.Service.LoginService;
 import hyo.shop.common.SessionConstants;
+import hyo.shop.domain.Cart;
 import hyo.shop.domain.Login;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +13,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.WebUtils;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -21,6 +25,7 @@ import javax.servlet.http.HttpSession;
 public class LoginController {
 
     private final LoginService loginService;
+    private final CartService cartService;
     private final PasswordEncoder pwEncoder;
 
     //컨트롤러 내에서 발생하는 예외를 모두 처리해준다
@@ -66,7 +71,10 @@ public class LoginController {
     public String login(@ModelAttribute Login loginForm,
                         @RequestParam(defaultValue = "/") String redirectURL,
                         HttpServletRequest request,
-                        Model model) {
+                        Model model)
+    {
+        Cookie cookie = WebUtils.getCookie(request, "cartCookie");
+        Cart cart = new Cart();
 
         Login loginMember = loginService.getUser(loginForm);
         String path = request.getParameter("path");
@@ -91,6 +99,14 @@ public class LoginController {
         // 로그인 성공
         HttpSession session = request.getSession(); // 세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성하여 반환
         session.setAttribute(SessionConstants.LOGIN_MEMBER, loginMember);   // 세션에 로그인 회원 정보 보관
+
+        // 비회원 장바구니 업데이트
+        if(cookie != null) {
+            cart.setCart_ckid(cookie.getValue());
+            cart.setUser_id(loginMember.getUser_id());
+
+            cartService.updateCartList(cart);
+        }
 
         return "redirect:" + redirectURL;
     }

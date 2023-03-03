@@ -16,6 +16,8 @@ public class Cart {
     private String user_id;
     private Long goods_no;
     private Long option_no;
+    private int goods_quantity;
+    private String select_yn;
     private LocalDateTime cart_cklimit;
     private String cart_ckid;
 

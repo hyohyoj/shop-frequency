@@ -25,6 +25,27 @@
         LIMIT #{searchVo.pagination.limitStart}, #{searchVo.recordSize}
     </select>
 
+    <select id="getCartGoodsList" parameterType="list" resultType="hyo.shop.domain.Goods">
+        SELECT
+             goods_no
+            ,goods_title
+            ,goods_desc
+            ,goods_price
+            ,goods_stock
+            ,frequency_yn
+            ,insert_user_id
+            ,insert_date
+        FROM
+            goods_info
+        WHERE
+            goods_no IN
+        (
+        <foreach collection="list" item="goods" separator=",">
+            #{goods.goods_no}
+        </foreach>
+        )
+    </select>
+
     <select id="getGoods" parameterType="Long" resultType="hyo.shop.domain.Goods">
         SELECT
              goods_no

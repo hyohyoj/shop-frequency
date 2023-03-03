@@ -35,14 +35,33 @@ create table cart_info (
     user_id varchar(50),
     goods_no int not null,
     option_no int,
+    goods_quantity int,
+    select_yn char(1) not null default 'Y',
     cart_cklimit datetime default current_timestamp,
     cart_ckid varchar(20)
 );
+
+drop table cart_info;
 
 select * from user_info;
 select * from goods_info;
 select * from cart_info;
 select * from file_info;
+
+select   c.cart_no
+		,c.user_id
+        ,c.goods_no
+        ,c.option_no
+        ,c.goods_quantity
+        ,c.cart_cklimit
+        ,c.cart_ckid
+        ,g.goods_title
+        ,g.goods_desc
+        ,g.goods_price
+        ,g.frequency_yn
+        FROM cart_info c, goods_info g
+        WHERE c.goods_no = g.goods_no
+        and cart_ckid = 'sqh43R';
 
 update goods_info set frequency_yn = 'N' where goods_no = 9;
 

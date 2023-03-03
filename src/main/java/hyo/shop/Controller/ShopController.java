@@ -13,6 +13,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,11 +77,6 @@ public class ShopController {
             List<Goods> goodsList = shopService.goodsList(searchMap);
             goodsList = fileUtils.setImageUploadPath(goodsList);    // 출력 이미지 경로 지정
 
-            for (Goods g : goodsList) {
-                int price = g.getGoods_price();
-                g.setFormatPrice(formatter.format(price));
-            }
-
             mv.setViewName("/shop/setGoodsList");
             mv.addObject("goodsList", goodsList);                   // 상품 목록
             if(loginMember != null) {
@@ -105,18 +102,15 @@ public class ShopController {
         Goods goods = shopService.getGoods(goodsNo);
         goods = fileUtils.setImagePathArray(goods);     // 출력 이미지 경로 지정
 
-        int price = goods.getGoods_price();
-        goods.setFormatPrice(formatter.format(price));
-
         mv.setViewName("/shop/goodsDetail");
         mv.addObject("goods", goods);
 
         return mv;
     }
 
-    @PostMapping("/cart")
+    @PostMapping("/cartInsert")
     @ResponseBody
-    public int cart(@RequestBody Cart cart,
+    public int cartInsert(@RequestBody Cart cart,
                     @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
                     HttpServletRequest request, HttpServletResponse response)
     {
@@ -149,7 +143,8 @@ public class ShopController {
             cookie.setMaxAge(60 * 60 * 24 * 1);
             response.addCookie(cookie);
 
-            //insert
+            cartService.cartInsert(cart);
+            cartService.updateCookieLimit(cart);
         }
         // 회원 장바구니 상품 추가
         else if(loginMember != null) {
@@ -163,6 +158,68 @@ public class ShopController {
             cartService.cartInsert(cart);
         }
         return 1;
+    }
+
+    @GetMapping("/cartSelect")
+    @ResponseBody
+    public ModelAndView cartSelect(@SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
+                                   HttpServletRequest request)
+    {
+        Cookie cookie = WebUtils.getCookie(request, "cartCookie");
+
+        ModelAndView mv = new ModelAndView("jsonView");
+
+        List<Goods> goodsNoList = new ArrayList<>();
+        List<Goods> goodsList = null;
+
+        List<Map<String, Object>> cartList = null;
+
+        Cart cart = new Cart();
+
+        // 비회원
+        if(loginMember == null) {
+            cart.setCart_ckid(cookie.getValue());
+
+            cartList = cartService.selectCartList(cart);
+        }
+        // 회원
+        else if(loginMember != null) {
+            cart.setUser_id(loginMember.getUser_id());
+
+            cartList = cartService.selectCartList(cart);
+        }
+
+        if(!cartList.isEmpty()) {
+            for (Map<String, Object> map : cartList) {
+                Goods goods = new Goods();
+                goods.setGoods_no(Long.valueOf(String.valueOf(map.get("goods_no"))));
+
+                goodsNoList.add(goods);
+            }
+            goodsList = shopService.getCartGoodsList(goodsNoList);
+            goodsList = fileUtils.setImageUploadPath(goodsList);    // 출력 이미지 경로 지정
+        }
+
+        mv.setViewName("/shop/cartDetail");
+        mv.addObject("cartList", cartList);
+        mv.addObject("goodsList", goodsList);
+
+        return mv;
+    }
+
+    @PostMapping("/cartQuantityUpdate")
+    @ResponseBody
+    public String cartQuantityUpdate(@RequestBody Cart cart) {
+
+        String result = "fail";
+
+        int success = cartService.updateQuantity(cart);
+
+        if(success > 0) {
+            result = "success";
+        }
+
+        return result;
     }
 
 //        // 프리퀀시

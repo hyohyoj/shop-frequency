@@ -12,7 +12,7 @@
         </div>
     </td>
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:utext="${goods.goods_title}"></td>
-    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.formatPrice}"></td>
+    <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="|${#numbers.formatInteger(goods.goods_price, 3, 'COMMA')}원|"></td>
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.goods_stock}"></td>
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${#strings.equals(goods.frequency_yn, 'Y') ? 'O' : 'X'}"></td>
     <td th:onclick="|location.href='@{/admin/modifyForm( goods_no = ${goods.goods_no} )}'|" th:text="${goods.insert_user_id}"></td>

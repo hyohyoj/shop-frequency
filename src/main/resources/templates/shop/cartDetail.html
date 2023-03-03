@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/cart.css">
+</head>
+<script th:inline="javascript">
+    let cartList = [[ ${cartList} ]];
+
+    function formatTotal(cartNo, quantity, price) {
+        let total = 0;
+        total = price * quantity;
+
+        const formatTotal = total.toLocaleString('ko-KR');
+        $("span[id='total_" + cartNo + "']").text(formatTotal + '원');
+    }
+
+    function formatTotalPrice(cartList) {
+<!--        체크박스 추가해서-->
+<!--        select_yn == 'Y'인 애들만 모아서 총 가격 계산-->
+<!--        -->
+<!--        체크박스 변경될 때마다 DB update-->
+<!--        -->
+<!--        구현 목록-->
+<!--        1.전체 선택-->
+<!--        2.전체 해제-->
+<!--        3.전체 구매-->
+<!--        4.선택 삭제-->
+<!--        5.선택 구매-->
+    }
+
+    function updateQuantity(cartNo, quantity) {
+        let params = {
+            'cart_no' : cartNo,
+            'goods_quantity' : quantity
+        }
+
+        $.ajax({
+            type : "POST",
+            url : "/shop/cartQuantityUpdate",
+            dataType:"text",
+            contentType : 'application/json; charset=utf-8',
+            data : JSON.stringify(params),
+            success : function(data){
+                if(data == 'success') {
+                    location.reload();
+                }
+            }
+<!--            ,beforeSend : function() {-->
+<!--                $('.wrap-loading').removeClass('display-none');-->
+<!--            }-->
+<!--            ,complete : function() {-->
+<!--                $('.wrap-loading').addClass('display-none');-->
+<!--            }-->
+        });
+    }
+
+    $(document).ready(function () {
+
+        for(let i = 0; i < cartList.length; i++) {
+            let cartNo = cartList[i].cart_no;
+            let quantity = cartList[i].goods_quantity;
+            let price = cartList[i].goods_price;
+
+            formatTotal(cartNo, quantity, price)
+        }
+
+        // 수량 추가
+        $("button[id^='plusQuantity']").on("click", function() {
+            let cartNo = $(this).attr('id').split('_')[1];
+            let quantity = $("#cartQuantity_" + cartNo).val();
+
+            quantity++;
+            updateQuantity(cartNo, quantity);
+        });
+
+        // 수량 감소
+        $("button[id^='minusQuantity']").on("click", function() {
+            let cartNo = $(this).attr('id').split('_')[1];
+            let quantity = $("#cartQuantity_" + cartNo).val();
+
+            if(quantity <= 1) {
+                alert("수량은 1개 이상이여야 합니다.");
+                return false;
+            }
+
+            quantity--;
+            updateQuantity(cartNo, quantity);
+        });
+
+    })
+</script>
+<body>
+<h1>장바구니</h1>
+<th:block th:if="${#strings.isEmpty(session.loginMember)}">
+    <button onclick="location.href='items.html'"
+            th:onclick="|location.href='@{/login}'|" type="button">
+        로그인
+    </button>
+    <button type="button" th:onclick="|location.href='@{/signup}'|">회원가입</button>
+</th:block>
+<th:block th:unless="${#strings.isEmpty(session.loginMember)}">
+    <form th:action="@{/logout}" method="post">
+        <button onclick="location.href='items.html'" type="submit">
+            로그아웃
+        </button>
+    </form>
+</th:block>
+<hr>
+<table class="subject_table">
+    <caption>표 제목 부분</caption>
+    <tbody>
+
+    <tr>
+        <th class="td_width_1"></th>
+        <th class="td_width_2"></th>
+        <th class="td_width_3">상품명</th>
+        <th class="td_width_4">가격</th>
+        <th class="td_width_4">수량</th>
+        <th class="td_width_4">합계</th>
+        <th class="td_width_4">삭제</th>
+    </tr>
+    </tbody>
+</table>
+<table class="cart_table">
+    <caption>표 내용 부분</caption>
+    <tbody>
+    <th:block th:if="${not #lists.isEmpty(cartList)}" th:each="cart, status : ${cartList}">
+        <tr>
+            <td class="td_width_1">체크박스</td>
+            <td class="td_width_2">
+                <div class="image-wrap">
+                    <th:block th:each="goods, status : ${goodsList}">
+                        <th:block th:if="${#strings.equals(goods.goods_no, cart.goods_no)}">
+                            <img th:src="${goods.thumbnailUploadPath}"/>
+                        </th:block>
+                    </th:block>
+                </div>
+            </td>
+            <td class="td_width_3" >
+                <span th:text="${cart.goods_title}"></span>
+            </td>
+            <td class="td_width_4 price_td">
+                <span th:id="|price_${cart.cart_no}|" th:value="${cart.goods_price}" th:text="|${#numbers.formatInteger(cart.goods_price, 3, 'COMMA')}원|"></span>
+            </td>
+            <td class="td_width_4 table_text_align_center">
+                <div class="table_text_align_center quantity_div">
+                    <input th:id="|cartQuantity_${cart.cart_no}|" type="text" th:value="${cart.goods_quantity}" class="quantity_input" readonly>
+                    <button th:id="|plusQuantity_${cart.cart_no}|" class="quantity_btn plus_btn">+</button>
+                    <button th:id="|minusQuantity_${cart.cart_no}|" class="quantity_btn minus_btn">-</button>
+                </div>
+<!--                <a class="quantity_modify_btn">변경</a>-->
+            </td>
+            <td class="td_width_4 table_text_align_center">
+                <span th:id="|total_${cart.cart_no}|" th:text="|${#numbers.formatInteger(cart.goods_price, 3, 'COMMA')}원|"></span>
+            </td>
+            <td class="td_width_4 table_text_align_center delete_btn"><button>삭제</button></td>
+        </tr>
+    </th:block>
+    <th:block th:unless="${not #lists.isEmpty(cartList)}">
+        <tr>
+            <td style="text-align: center;" colspan="7"><b>장바구니가 비어있습니다.</b></td>
+        </tr>
+    </th:block>
+    </tbody>
+</table>
+<table class="list_table">
+</table>
+</div>
+<th:block th:if="${not #lists.isEmpty(cartList)}">
+<!-- 가격 종합 -->
+<div class="content_total_section">
+    <div class="total_wrap">
+        <table>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td>총 상품 가격</td>
+                            <td>
+                                <span class="totalPrice_span">70000</span> 원
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>배송비</td>
+                            <td>
+                                <span class="delivery_price">3000</span>원
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>총 주문 상품수</td>
+                            <td><span class="totalKind_span"></span>종 <span class="totalCount_span"></span>권</td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <div class="boundary_div">구분선</div>
+        <table>
+            <tr>
+                <td>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <strong>총 결제 예상 금액</strong>
+                            </td>
+                            <td>
+                                <span class="finalTotalPrice_span">70000</span> 원
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <strong>총 적립 예상 마일리지</strong>
+
+                            </td>
+                            <td>
+                                <span class="totalPoint_span">70000</span> 원
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<!-- 구매 버튼 영역 -->
+<div class="content_btn_section">
+    <a>주문하기</a>
+</div>
+</th:block>
+
+<!-- 로딩바 영역 -->
+<div class="wrap-loading display-none">
+    <div><img style="width: 50px;" src="../images/loading.gif" /></div>
+</div>
+
+</body>
+</html>
+

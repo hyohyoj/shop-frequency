@@ -31,6 +31,7 @@
             <if test="option_no != null">
                 ,option_no
             </if>
+                ,goods_quantity
                 ,cart_cklimit
         )
         VALUES(
@@ -44,8 +45,63 @@
             <if test="option_no != null">
                 ,#{option_no}
             </if>
+                ,#{goods_quantity}
                 ,CURRENT_TIMESTAMP
         )
     </insert>
+
+    <update id="updateCookieLimit" parameterType="hyo.shop.domain.Cart">
+        UPDATE
+            cart_info
+        SET
+            cart_cklimit = CURRENT_TIMESTAMP
+        WHERE
+            cart_ckid = #{cart_ckid}
+    </update>
+
+    <select id="selectCartList" parameterType="hyo.shop.domain.Cart" resultType="hashmap">
+        SELECT
+             c.cart_no
+            ,c.user_id
+            ,c.goods_no
+            ,c.option_no
+            ,c.goods_quantity
+            ,c.select_yn
+            ,c.cart_cklimit
+            ,c.cart_ckid
+            ,g.goods_title
+            ,g.goods_desc
+            ,g.goods_price
+            ,g.frequency_yn
+        FROM
+            cart_info c, goods_info g
+        WHERE
+            c.goods_no = g.goods_no
+        AND
+            <if test="user_id == null or user_id == ''">
+                cart_ckid = #{cart_ckid}
+            </if>
+            <if test="user_id != null and user_id != ''">
+                user_id = #{user_id}
+            </if>
+    </select>
+
+    <update id="updateCartList" parameterType="hyo.shop.domain.Cart">
+        UPDATE
+            cart_info
+        SET
+            user_id = #{user_id}
+        WHERE
+            cart_ckid = #{cart_ckid}
+    </update>
+
+    <update id="updateQuantity" parameterType="hyo.shop.domain.Cart">
+        UPDATE
+            cart_info
+        SET
+            goods_quantity = #{goods_quantity}
+        WHERE
+            cart_no = #{cart_no};
+    </update>
 
 </mapper>

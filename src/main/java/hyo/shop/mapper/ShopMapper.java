@@ -13,4 +13,5 @@ public interface ShopMapper {
     int update(Goods goods);
     List<Goods> goodsList(Map<String, Object> map);
     Goods getGoods(Long goodsNo);
+    List<Goods> getCartGoodsList(List<Goods> goodsNoList);
 }

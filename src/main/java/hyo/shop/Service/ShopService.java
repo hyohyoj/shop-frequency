@@ -35,4 +35,8 @@ public class ShopService {
     public Goods getGoods(Long goodsNo) {
         return shopMapper.getGoods(goodsNo);
     }
+
+    public List<Goods> getCartGoodsList(List<Goods> goodsNoList) {
+        return shopMapper.getCartGoodsList(goodsNoList);
+    }
 }
