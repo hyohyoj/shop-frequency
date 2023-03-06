@@ -24,6 +24,14 @@ public class CartService {
         return cartMapper.cartCheck(cart);
     }
 
+    public int cartDelete(Cart cart) {
+        return cartMapper.cartDelete(cart);
+    }
+
+    public int cartSelectDelete(List<Cart> cartlist) {
+        return cartMapper.cartSelectDelete(cartlist);
+    }
+
     public List<Map<String, Object>> selectCartList(Cart cart) {
         return cartMapper.selectCartList(cart);
     }
@@ -38,5 +46,13 @@ public class CartService {
 
     public int updateQuantity(Cart cart) {
         return cartMapper.updateQuantity(cart);
+    }
+
+    public int updateSelectYn(Cart cart) {
+        return cartMapper.updateSelectYn(cart);
+    }
+
+    public int updateSelectYnAll(Cart cart) {
+        return cartMapper.updateSelectYnAll(cart);
     }
 }

@@ -1,19 +1,18 @@
 package hyo.shop.Controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hyo.shop.Service.CartService;
+import hyo.shop.Service.FrequencyService;
 import hyo.shop.Service.ShopService;
 import hyo.shop.common.FileUtils;
 import hyo.shop.common.SessionConstants;
 import hyo.shop.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
+import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -22,10 +21,6 @@ import org.springframework.web.util.WebUtils;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,6 +35,7 @@ public class ShopController {
 
     private final ShopService shopService;
     private final CartService cartService;
+    private final FrequencyService frequencyService;
     private final FileUtils fileUtils;
 
     // ModelAndView 형태로 데이터가 세팅 된 뷰를 반환
@@ -172,12 +168,12 @@ public class ShopController {
         List<Goods> goodsNoList = new ArrayList<>();
         List<Goods> goodsList = null;
 
-        List<Map<String, Object>> cartList = null;
+        List<Map<String, Object>> cartList = new ArrayList<>();
 
         Cart cart = new Cart();
 
         // 비회원
-        if(loginMember == null) {
+        if(loginMember == null && cookie != null) {
             cart.setCart_ckid(cookie.getValue());
 
             cartList = cartService.selectCartList(cart);
@@ -210,7 +206,6 @@ public class ShopController {
     @PostMapping("/cartQuantityUpdate")
     @ResponseBody
     public String cartQuantityUpdate(@RequestBody Cart cart) {
-
         String result = "fail";
 
         int success = cartService.updateQuantity(cart);
@@ -220,6 +215,252 @@ public class ShopController {
         }
 
         return result;
+    }
+
+    @PostMapping("/cartSelectYnUpdate")
+    @ResponseBody
+    public String cartSelectYnUpdate(@RequestBody Cart cart) {
+        String result = "fail";
+
+        int success = cartService.updateSelectYn(cart);
+
+        if(success > 0) {
+            result = "success";
+        }
+
+        return result;
+    }
+
+    @PostMapping("/cartSelectYnUpdateAll")
+    @ResponseBody
+    public String cartSelectYnUpdateAll(@RequestBody Cart cart, HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, "cartCookie");
+
+        String result = "fail";
+
+        // 비회원
+        if(cart.getUser_id() == null && cookie != null) {
+            cart.setCart_ckid(cookie.getValue());
+        }
+
+        int success = cartService.updateSelectYnAll(cart);
+
+        if(success > 0) {
+            result = "success";
+        }
+
+        return result;
+    }
+
+    @PostMapping("/cartDelete")
+    @ResponseBody
+    public String cartDelete(@RequestBody Cart cart) {
+        String result = "fail";
+
+        int success = cartService.cartDelete(cart);
+
+        if(success > 0) {
+            result = "success";
+        }
+
+        return result;
+    }
+
+    @PostMapping("/cartSelectDelete")
+    @ResponseBody
+    public String cartSelectDelete(@RequestBody List<Cart> cartList) {
+        String result = "fail";
+
+        int success = cartService.cartSelectDelete(cartList);
+
+        if(success > 0) {
+            result = "success";
+        }
+
+        return result;
+    }
+
+    // 프리퀀시 적립
+    @PostMapping("/order")
+    @ResponseBody
+    public String order(@RequestBody Map<String, Object> map) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // JSON 데이터 받아옴
+        String json = mapper.writeValueAsString(map.get("items"));
+        String sessionId = map.get("sessionId").toString();
+        List<Order> orderList = mapper.readValue(json, new TypeReference<ArrayList<Order>>(){});
+
+        int totalPrice = 0;
+        int price = 0;
+        int frequencyCount = 0;
+
+        Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 구매금액>
+
+        int success = 0;
+        String result = "fail";
+
+        // 이벤트 별 프리퀀시 상품 구매 금액 저장
+        for (Order order : orderList) {
+            if(order.getEvent_type() != null) {
+                Long typeNo = order.getEvent_type();
+                String frequencyYn = order.getFrequency_yn();
+
+                // 구매금액 초기화
+                price = 0;
+
+                if(priceMap.containsKey(typeNo)) {
+                    price = priceMap.get(typeNo);
+                }
+                if(frequencyYn.equals("Y")) {
+                    price += (order.getPrice() * order.getQuantity());
+                }
+
+                priceMap.put(typeNo, price);
+            }
+        }
+
+        for(Long typeNo : priceMap.keySet()) {
+            Frequency f = new Frequency();
+            f.setType_no(typeNo);
+            f.setUser_id(sessionId);    // 구매자 아이디 -> 세션 아이디로 사용
+
+            // 해당 이벤트의 프리퀀시 데이터 존재하는지 확인
+            Frequency frequency = frequencyService.getFrequency(f);
+
+            price = priceMap.get(typeNo);
+
+            // 첫 구매
+            if(frequency == null) {
+                totalPrice = 0;
+                totalPrice += price;
+
+                // 프리퀀시 최대 금액은 30만원 (총 3개)
+                if(totalPrice > 300000) {
+                    totalPrice = 300000;
+                }
+
+                frequencyCount = (int) Math.floor((double) totalPrice / 100000);   // 누적금액 10만원 당 프리퀀시 1개 적립
+
+                f.setFreq_count(frequencyCount);
+                f.setFreq_amount(totalPrice);
+
+                success += frequencyService.insertFrequency(f);
+            }
+            else {
+                // 해당 이벤트의 프리퀀시 기존 누적 금액 불러옴
+                totalPrice = frequency.getFreq_amount();
+                totalPrice += price;
+
+                // 프리퀀시 최대 금액은 30만원 (총 3개)
+                if(totalPrice > 300000) {
+                    totalPrice = 300000;
+                }
+
+                frequencyCount = (int) Math.floor((double) totalPrice / 100000);   // 누적금액 10만원 당 프리퀀시 1개 적립
+
+                f.setFreq_count(frequencyCount);
+                f.setFreq_amount(totalPrice);
+
+                success += frequencyService.updateFrequency(f);
+            }
+
+        }   // end of for
+
+        Frequency f2 = new Frequency();
+        f2.setUser_id(sessionId);
+        List<Frequency> fList = frequencyService.getFrequencyList(f2);
+
+        if(success == priceMap.size()) {
+            result = "success";
+        }
+
+        JSONObject jo = new JSONObject();
+        jo.put("frequencyList", fList);
+        jo.put("result", result);
+
+        return jo.toString();
+    }
+
+    // 환불 및 취소
+    @PostMapping("/refund")
+    @ResponseBody
+    public String refund(@RequestBody Map<String, Object> map) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // JSON 데이터 받아옴
+        String json = mapper.writeValueAsString(map.get("items"));
+        String sessionId = map.get("sessionId").toString();
+        List<Order> orderList = mapper.readValue(json, new TypeReference<ArrayList<Order>>(){});
+
+        int totalPrice = 0;
+        int price = 0;
+        int frequencyCount = 0;
+
+        Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 구매금액>
+
+        int success = 0;
+        String result = "fail";
+
+        // 이벤트 별 프리퀀시 상품 환불 금액 저장
+        for (Order order : orderList) {
+            if(order.getEvent_type() != null) {
+                Long typeNo = order.getEvent_type();
+                String frequencyYn = order.getFrequency_yn();
+
+                // 환불금액 초기화
+                price = 0;
+
+                if (priceMap.containsKey(typeNo)) {
+                    price = priceMap.get(typeNo);
+                }
+                if (frequencyYn.equals("Y")) {
+                    price += (order.getPrice() * order.getQuantity());
+                }
+
+                priceMap.put(typeNo, price);
+            }
+        }
+
+        for(Long typeNo : priceMap.keySet()) {
+            Frequency f = new Frequency();
+            f.setType_no(typeNo);
+            f.setUser_id(sessionId);    // 구매자 아이디 -> 세션 아이디로 사용
+
+            Frequency frequency = frequencyService.getFrequency(f);
+
+            price = priceMap.get(typeNo);
+
+            // 해당 이벤트의 프리퀀시 기존 누적 금액 불러옴
+            totalPrice = frequency.getFreq_amount();
+            totalPrice -= price;
+
+            if(totalPrice < 0) {
+                totalPrice = 0;
+            }
+
+            frequencyCount = (int) Math.floor((double) totalPrice / 100000);
+
+            f.setFreq_count(frequencyCount);
+            f.setFreq_amount(totalPrice);
+
+            success += frequencyService.updateFrequency(f);
+
+        }   // end of for
+
+        Frequency f2 = new Frequency();
+        f2.setUser_id(sessionId);
+        List<Frequency> fList = frequencyService.getFrequencyList(f2);
+
+        if(success == priceMap.size()) {
+            result = "success";
+        }
+
+        JSONObject jo = new JSONObject();
+        jo.put("frequencyList", fList);
+        jo.put("result", result);
+
+        return jo.toString();
     }
 
 //        // 프리퀀시

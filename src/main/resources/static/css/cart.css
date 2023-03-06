@@ -61,6 +61,7 @@ table{
     text-align: center;
     margin-right: 14px;
     line-height: 39px;
+    border-radius: 10px;
     }
 
 
@@ -87,11 +88,9 @@ table{
     }
     .td_width_3{
         width: 25%;
-        text-align: center;
     }
     .td_width_4{
         width: 15%;
-        text-align: center;
     }
     .cart_table{
         font-size: 14px;

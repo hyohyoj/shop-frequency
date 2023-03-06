@@ -3,7 +3,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>장바구니</title>
     <!-- CDN -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
     <!-- Local -->
@@ -12,7 +12,9 @@
 </head>
 <script th:inline="javascript">
     let cartList = [[ ${cartList} ]];
+    let selectCartList = [];
 
+    // 상품별 합계 가격 계산
     function formatTotal(cartNo, quantity, price) {
         let total = 0;
         total = price * quantity;
@@ -21,18 +23,31 @@
         $("span[id='total_" + cartNo + "']").text(formatTotal + '원');
     }
 
-    function formatTotalPrice(cartList) {
-<!--        체크박스 추가해서-->
-<!--        select_yn == 'Y'인 애들만 모아서 총 가격 계산-->
-<!--        -->
-<!--        체크박스 변경될 때마다 DB update-->
-<!--        -->
-<!--        구현 목록-->
-<!--        1.전체 선택-->
-<!--        2.전체 해제-->
-<!--        3.전체 구매-->
-<!--        4.선택 삭제-->
-<!--        5.선택 구매-->
+    // 총 가격 계산
+    function formatTotalPrice(selectCartList) {
+        let totalPrice = 0;
+        let deliveryPrice = $("span[class='delivery_price']").text();
+
+        for(let i = 0; i < selectCartList.length; i++) {
+            let cartNo = selectCartList[i].cart_no;
+            let quantity = selectCartList[i].goods_quantity;
+            let price = selectCartList[i].goods_price;
+
+            totalPrice += quantity * price;
+        }
+
+        const formatTotalPrice = totalPrice.toLocaleString('ko-KR');
+        $("span[class='totalPrice_span']").text(formatTotalPrice);
+
+        if(totalPrice != 0) {
+            totalPrice += parseInt(deliveryPrice);
+
+            const formatFinalTotalPrice = totalPrice.toLocaleString('ko-KR');
+            $("span[class='finalTotalPrice_span']").text(formatFinalTotalPrice);
+        } else {
+            $("span[class='delivery_price']").text(0);
+            $("span[class='finalTotalPrice_span']").text(formatTotalPrice);
+        }
     }
 
     function updateQuantity(cartNo, quantity) {
@@ -61,15 +76,63 @@
         });
     }
 
+    function updateSelectYn(cartNo, selectYn) {
+        let params = {
+            'cart_no' : cartNo,
+            'select_yn' : selectYn
+        }
+
+        $.ajax({
+            type : "POST",
+            url : "/shop/cartSelectYnUpdate",
+            dataType:"text",
+            contentType : 'application/json; charset=utf-8',
+            data : JSON.stringify(params),
+            success : function(data){
+                if(data == 'success') {
+                    location.reload();
+                }
+            }
+        });
+    }
+
+    function updateSelectYnAll(userId, selectYn) {
+        let params = {
+            'user_id' : userId,
+            'select_yn' : selectYn
+        }
+
+        $.ajax({
+            type : "POST",
+            url : "/shop/cartSelectYnUpdateAll",
+            dataType:"text",
+            contentType : 'application/json; charset=utf-8',
+            data : JSON.stringify(params),
+            success : function(data){
+                if(data == 'success') {
+                    location.reload();
+                }
+            }
+        });
+    }
+
     $(document).ready(function () {
 
         for(let i = 0; i < cartList.length; i++) {
             let cartNo = cartList[i].cart_no;
             let quantity = cartList[i].goods_quantity;
             let price = cartList[i].goods_price;
+            let selectYn = cartList[i].select_yn;
 
-            formatTotal(cartNo, quantity, price)
+            if(selectYn == 'N') {
+                $("#checkAll").prop("checked", false);
+            } else {
+                selectCartList.push({"cart_no":cartNo, "goods_quantity":quantity, "goods_price":price});
+            }
+
+            formatTotal(cartNo, quantity, price);
         }
+        formatTotalPrice(selectCartList);
 
         // 수량 추가
         $("button[id^='plusQuantity']").on("click", function() {
@@ -94,6 +157,84 @@
             updateQuantity(cartNo, quantity);
         });
 
+        // 전체 체크박스
+        $("#checkAll").on("click", function() {
+            let userId = $("#user_id").val();
+
+            if($(this).is(":checked")) {
+                updateSelectYnAll(userId, 'Y');
+                $("input[name=cart_chk]").prop("checked", true);
+            } else {
+                updateSelectYnAll(userId, 'N');
+                $("input[name=cart_chk]").prop("checked", false);
+            }
+        });
+
+        // 개별 체크박스
+        $("input[id^='check_']").on("click", function() {
+            let cartNo = $(this).attr('id').split('_')[1];
+
+            if($(this).is(":checked")) {
+                updateSelectYn(cartNo, 'Y');
+                $(this).prop("checked", true);
+            } else {
+                updateSelectYn(cartNo, 'N');
+                $(this).prop("checked", false);
+            }
+        });
+
+        // 개별 삭제
+        $("button[id^='deleteBtn_']").on("click", function() {
+            let cartNo = $(this).attr('id').split('_')[1];
+
+            let params = {
+                'cart_no' : cartNo
+            }
+
+            if(confirm('상품을 삭제하시겠습니까?')) {
+                $.ajax({
+                    type : "POST",
+                    url : "/shop/cartDelete",
+                    dataType:"text",
+                    contentType : 'application/json; charset=utf-8',
+                    data : JSON.stringify(params),
+                    success : function(data){
+                        if(data == 'success') {
+                            alert('삭제가 완료되었습니다.');
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        });
+
+        // 선택 삭제
+        $("#selectDelete").on("click", function() {
+            let deleteList = [];
+
+            for(let i = 0; i < selectCartList.length; i++) {
+                //deleteList.push(selectCartList[i].cart_no);
+                deleteList.push({'cart_no':selectCartList[i].cart_no});
+            }
+
+            if(confirm('선택 상품을 삭제하시겠습니까?')) {
+                $.ajax({
+                    type : "POST",
+                    url : "/shop/cartSelectDelete",
+                    dataType:"text",
+                    contentType : 'application/json; charset=utf-8',
+                    data : JSON.stringify(deleteList),
+                    success : function(data){
+                        if(data == 'success') {
+                            alert('삭제가 완료되었습니다.');
+                            location.reload();
+                        }
+                    }
+                });
+            }
+
+        });
+
     })
 </script>
 <body>
@@ -111,6 +252,7 @@
             로그아웃
         </button>
     </form>
+    <input type="hidden" th:value="${session.loginMember?.user_id}" id="user_id"/>
 </th:block>
 <hr>
 <table class="subject_table">
@@ -118,7 +260,7 @@
     <tbody>
 
     <tr>
-        <th class="td_width_1"></th>
+        <th class="td_width_1"><input type="checkbox" id="checkAll" checked="true"/></th>
         <th class="td_width_2"></th>
         <th class="td_width_3">상품명</th>
         <th class="td_width_4">가격</th>
@@ -133,7 +275,7 @@
     <tbody>
     <th:block th:if="${not #lists.isEmpty(cartList)}" th:each="cart, status : ${cartList}">
         <tr>
-            <td class="td_width_1">체크박스</td>
+            <td class="td_width_1 table_text_align_center"><input type="checkbox" th:id="|check_${cart.cart_no}|" name="cart_chk" th:checked="${#strings.equals(cart.select_yn, 'Y')}"/></td>
             <td class="td_width_2">
                 <div class="image-wrap">
                     <th:block th:each="goods, status : ${goodsList}">
@@ -143,10 +285,10 @@
                     </th:block>
                 </div>
             </td>
-            <td class="td_width_3" >
+            <td class="td_width_3 table_text_align_center">
                 <span th:text="${cart.goods_title}"></span>
             </td>
-            <td class="td_width_4 price_td">
+            <td class="td_width_4 price_td table_text_align_center">
                 <span th:id="|price_${cart.cart_no}|" th:value="${cart.goods_price}" th:text="|${#numbers.formatInteger(cart.goods_price, 3, 'COMMA')}원|"></span>
             </td>
             <td class="td_width_4 table_text_align_center">
@@ -160,7 +302,7 @@
             <td class="td_width_4 table_text_align_center">
                 <span th:id="|total_${cart.cart_no}|" th:text="|${#numbers.formatInteger(cart.goods_price, 3, 'COMMA')}원|"></span>
             </td>
-            <td class="td_width_4 table_text_align_center delete_btn"><button>삭제</button></td>
+            <td class="td_width_4 table_text_align_center delete_btn"><button th:id="|deleteBtn_${cart.cart_no}|">삭제</button></td>
         </tr>
     </th:block>
     <th:block th:unless="${not #lists.isEmpty(cartList)}">
@@ -184,19 +326,19 @@
                         <tr>
                             <td>총 상품 가격</td>
                             <td>
-                                <span class="totalPrice_span">70000</span> 원
+                                <span class="totalPrice_span"></span> 원
                             </td>
                         </tr>
                         <tr>
                             <td>배송비</td>
                             <td>
-                                <span class="delivery_price">3000</span>원
+                                <span class="delivery_price">3000</span> 원
                             </td>
                         </tr>
-                        <tr>
-                            <td>총 주문 상품수</td>
-                            <td><span class="totalKind_span"></span>종 <span class="totalCount_span"></span>권</td>
-                        </tr>
+<!--                        <tr>-->
+<!--                            <td>총 주문 상품수</td>-->
+<!--                            <td><span class="totalKind_span"></span>종 <span class="totalCount_span"></span>권</td>-->
+<!--                        </tr>-->
                     </table>
                 </td>
                 <td>
@@ -220,7 +362,7 @@
                                 <strong>총 결제 예상 금액</strong>
                             </td>
                             <td>
-                                <span class="finalTotalPrice_span">70000</span> 원
+                                <span class="finalTotalPrice_span"></span> 원
                             </td>
                         </tr>
                         </tbody>
@@ -229,15 +371,15 @@
                 <td>
                     <table>
                         <tbody>
-                        <tr>
-                            <td>
-                                <strong>총 적립 예상 마일리지</strong>
+<!--                        <tr>-->
+<!--                            <td>-->
+<!--                                <strong>총 적립 예상 마일리지</strong>-->
 
-                            </td>
-                            <td>
-                                <span class="totalPoint_span">70000</span> 원
-                            </td>
-                        </tr>
+<!--                            </td>-->
+<!--                            <td>-->
+<!--                                <span class="totalPoint_span">70000</span> 원-->
+<!--                            </td>-->
+<!--                        </tr>-->
                         </tbody>
                     </table>
                 </td>
@@ -247,7 +389,9 @@
 </div>
 <!-- 구매 버튼 영역 -->
 <div class="content_btn_section">
-    <a>주문하기</a>
+    <a style="cursor: pointer; min-width: 50px; float:left; margin-left:14px; background-color:#829464;" id="selectDelete">선택삭제</a>
+    <a style="cursor: pointer;" id="selectBuy">선택구매</a>
+    <a style="cursor: pointer;" id="buyAll">전체구매</a>
 </div>
 </th:block>
 

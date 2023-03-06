@@ -50,6 +50,21 @@
         )
     </insert>
 
+    <delete id="cartDelete" parameterType="hyo.shop.domain.Cart">
+        DELETE FROM cart_info
+        WHERE cart_no = #{cart_no}
+    </delete>
+
+    <delete id="cartSelectDelete" parameterType="list">
+        DELETE FROM cart_info
+        WHERE cart_no IN
+        (
+        <foreach collection="list" item="cart" separator=",">
+            #{cart.cart_no}
+        </foreach>
+        )
+    </delete>
+
     <update id="updateCookieLimit" parameterType="hyo.shop.domain.Cart">
         UPDATE
             cart_info
@@ -102,6 +117,29 @@
             goods_quantity = #{goods_quantity}
         WHERE
             cart_no = #{cart_no};
+    </update>
+
+    <update id="updateSelectYn" parameterType="hyo.shop.domain.Cart">
+        UPDATE
+            cart_info
+        SET
+            select_yn = #{select_yn}
+        WHERE
+            cart_no = #{cart_no};
+    </update>
+
+    <update id="updateSelectYnAll" parameterType="hyo.shop.domain.Cart">
+        UPDATE
+            cart_info
+        SET
+            select_yn = #{select_yn}
+        WHERE
+            <if test="user_id == null or user_id == ''">
+                cart_ckid = #{cart_ckid}
+            </if>
+            <if test="user_id != null and user_id != ''">
+                user_id = #{user_id}
+            </if>
     </update>
 
 </mapper>

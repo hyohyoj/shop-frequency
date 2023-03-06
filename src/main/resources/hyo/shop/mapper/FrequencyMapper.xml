@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hyo.shop.mapper.FrequencyMapper">
+
+    <select id="getFrequency" parameterType="hyo.shop.domain.Frequency" resultType="hyo.shop.domain.Frequency">
+        SELECT
+             freq_no
+            ,type_no
+            ,user_id
+            ,freq_count
+            ,freq_amount
+            ,insert_time
+            ,update_time
+            ,delete_yn
+        FROM
+            frequency_info
+        WHERE
+            type_no = #{type_no}
+        AND
+            user_id = #{user_id}
+    </select>
+
+    <insert id="insertFrequency" parameterType="hyo.shop.domain.Frequency">
+        INSERT INTO frequency_info (
+             type_no
+            ,user_id
+            ,freq_count
+            ,freq_amount
+        )
+        VALUES (
+             #{type_no}
+            ,#{user_id}
+            ,#{freq_count}
+            ,#{freq_amount}
+        )
+    </insert>
+
+    <update id="updateFrequency" parameterType="hyo.shop.domain.Frequency">
+        UPDATE
+            frequency_info
+        SET
+             freq_count = #{freq_count}
+            ,freq_amount = #{freq_amount}
+            ,update_time = CURRENT_TIMESTAMP
+        WHERE
+            type_no = #{type_no}
+        AND
+            user_id = #{user_id}
+    </update>
+
+    <select id="getFrequencyList" parameterType="hyo.shop.domain.Frequency" resultType="hyo.shop.domain.Frequency">
+        SELECT
+             freq_no
+            ,type_no
+            ,user_id
+            ,freq_count
+            ,freq_amount
+            ,insert_time
+            ,update_time
+            ,delete_yn
+        FROM
+            frequency_info
+        WHERE
+            user_id = #{user_id}
+    </select>
+
+</mapper>

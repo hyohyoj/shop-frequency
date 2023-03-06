@@ -1,0 +1,115 @@
+[프리퀀시 정책]
+- 이벤트마다 프리퀀시 존재
+- 프리퀀시 해당 상품의 누적 구매 금액이 10만원 이상일 시, 프리퀀시 1개 적립.
+- 프리퀀시는 총 3개까지 적립.
+- 환불 및 취소의 경우 누적 금액도 변경
+
+
+[OrderVO]
+event_type - 프리퀀시 이벤트 타입 넘버
+price - 가격
+quantity - 수량
+frequency_yn - 프리퀀시 여부
+user_id - 구매 유저 아이디
+
+
+[Request] - 상품 목록 전송
+
+{
+    "items": [
+        {
+            "event_type": 1,
+            "price": 13000,
+            "quantity": 9,
+            "frequency_yn": "Y",
+            "user_id": "hyo"
+        },
+        {
+            "event_type": 2,
+            "price": 10000,
+            "quantity": 3,
+            "frequency_yn": "Y",
+            "user_id": "hyo"
+        },
+        {
+            "event_type": 2,
+            "price": 9000,
+            "quantity": 5,
+            "frequency_yn": "N",
+            "user_id": "hyo"
+        },
+        {
+            "event_type": 3,
+            "price": 150000,
+            "quantity": 3,
+            "frequency_yn": "Y",
+            "user_id": "hyo"
+        },
+        {
+            "event_type": null,
+            "price": 150000,
+            "quantity": 3,
+            "frequency_yn": "Y",
+            "user_id": "hyo"
+        }
+    ],
+    "sessionId" : "hyo"
+}
+
+
+[Response] - 프리퀀시 리스트 반환
+
+{
+    "result": "success",
+    "frequencyList": [
+        {
+            "type_no": 1,
+            "freq_no": 14,
+            "user_id": "hyo",
+            "delete_yn": "N",
+            "insert_time": "2023-03-06T15:48:37",
+            "freq_amount": 117000,
+            "freq_count": 1
+        },
+        {
+            "type_no": 2,
+            "freq_no": 15,
+            "update_time": "2023-03-06T15:48:37",
+            "user_id": "hyo",
+            "delete_yn": "N",
+            "insert_time": "2023-03-06T15:48:37",
+            "freq_amount": 30000,
+            "freq_count": 0
+        },
+        {
+            "type_no": 3,
+            "freq_no": 16,
+            "user_id": "hyo",
+            "delete_yn": "N",
+            "insert_time": "2023-03-06T15:48:37",
+            "freq_amount": 300000,
+            "freq_count": 3
+        }
+    ]
+}
+
+
+1.이벤트별 프리퀀시 구매 금액이 담긴 priceMap 생성
+Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 총 구매금액>
+
+orderList = [A,A,A,A,A,B,B,B,C,null,null]
+=> (A, A_price), (B, B_price), (C, C_price)
+
+2.priceMap for문 돌면서 insert of update
+if(첫 구매) { 
+    ...
+    /* 프리퀀시 계산 */
+    ...
+    frequencyInsert()
+}
+else { 
+    ...
+    /* 프리퀀시 계산 */
+    ...
+    frequencyUpdate()
+}
