@@ -1,0 +1,20 @@
+.content_main{
+    min-height: 700px;
+    padding-right: 350px;
+    position: relative;
+}
+table{
+    border-collapse: collapse;
+}
+
+/* 사용자 정보  */
+.memberInfo_table{
+    width: 100%;
+    border-spacing: 0;
+    border-top: 2px solid #363636;
+    border-bottom: 1px solid #b6b6b6;
+}
+.member_info_div td{
+    padding : 12px;
+    text-align: left;
+}

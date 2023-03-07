@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>주문</title>
+    <!-- CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Local -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.cookie.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/order.css">
+</head>
+<script th:inline="javascript">
+
+</script>
+<body>
+<h1>주문</h1>
+<hr>
+<div class="content_main">
+    <!-- 회원 정보 -->
+    <div class="member_info_div">
+        <table class="table_text_align_center memberInfo_table">
+            <tbody>
+            <tr>
+                <th style="width: 25%;">주문자</th>
+                <td style="width: *" th:text="|${session.loginMember?.user_id} | hyohyoj@email.com|">김효정 | hyohyoj@email.com</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- 배송지 정보 -->
+    <!-- 상품 정보 -->
+    <!-- 포인트 정보 -->
+    <!-- 주문 종합 정보 -->
+</div>
+</body>
+</html>

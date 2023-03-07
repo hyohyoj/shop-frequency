@@ -1,12 +1,12 @@
 [프리퀀시 정책]
-- 이벤트마다 프리퀀시 존재
+- 프로모션마다 프리퀀시 존재
 - 프리퀀시 해당 상품의 누적 구매 금액이 10만원 이상일 시, 프리퀀시 1개 적립.
 - 프리퀀시는 총 3개까지 적립.
 - 환불 및 취소의 경우 누적 금액도 변경
 
 
 [OrderVO]
-event_type - 프리퀀시 이벤트 타입 넘버
+event_type - 프리퀀시 프로모션 타입 넘버 PK
 price - 가격
 quantity - 수량
 frequency_yn - 프리퀀시 여부
@@ -49,7 +49,7 @@ user_id - 구매 유저 아이디
             "event_type": null,
             "price": 150000,
             "quantity": 3,
-            "frequency_yn": "Y",
+            "frequency_yn": "N",
             "user_id": "hyo"
         }
     ],
@@ -94,10 +94,10 @@ user_id - 구매 유저 아이디
 }
 
 
-1.이벤트별 프리퀀시 구매 금액이 담긴 priceMap 생성
-Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 총 구매금액>
+1.프로모션별 프리퀀시 구매 금액이 담긴 priceMap 생성
+Map<Long, Integer> priceMap = new HashMap<>();  // Map<프로모션타입PK, 총 구매금액>
 
-orderList = [A,A,A,A,A,B,B,B,C,null,null]
+orderList = [A,A,A,A,A,B,B,B,C]
 => (A, A_price), (B, B_price), (C, C_price)
 
 2.priceMap for문 돌면서 insert of update

@@ -12,7 +12,6 @@ import hyo.shop.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -38,9 +37,45 @@ public class ShopController {
     private final FrequencyService frequencyService;
     private final FileUtils fileUtils;
 
+    @ExceptionHandler(value = Exception.class)
+    public String controllerExceptionHandler(Exception e) {
+        System.out.println(new RuntimeException(e.getMessage() + " : 에러 발생"));
+        return "/error";
+    }
+
+    /**
+     * 프로모션 별 프리퀀시 상품 금액 저장 함수
+     * @param orderList   - 상품리스트
+     * @return 프로모션 별 금액
+     */
+    public Map<Long, Integer> setFrequencyPrice(List<Order> orderList) {
+        Map<Long, Integer> priceMap = new HashMap<>();  // Map<프로모션타입PK, 금액>
+        int price = 0;
+
+        for (Order order : orderList) {
+            if(order.getEvent_type() != null) {
+                Long typeNo = order.getEvent_type();
+                String frequencyYn = order.getFrequency_yn();
+
+                // 구매금액 초기화
+                price = 0;
+
+                if(priceMap.containsKey(typeNo)) {
+                    price = priceMap.get(typeNo);
+                }
+                // 프리퀀시 해당 상품 가격 계산
+                if(frequencyYn.equals("Y")) {
+                    price += (order.getPrice() * order.getQuantity());
+                }
+
+                priceMap.put(typeNo, price);
+            }
+        }
+        return priceMap;
+    }
+
     // ModelAndView 형태로 데이터가 세팅 된 뷰를 반환
     @PostMapping("/getGoodsList")
-    @ResponseBody
     public ModelAndView getGoodsList(
             @RequestBody Map<String, Object> map,      // JSON 형식으로 받아옴
             @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
@@ -59,11 +94,10 @@ public class ShopController {
 //        response.addCookie(pageCookie);
 
         Map<String, Object> searchMap = new HashMap<>();
-        DecimalFormat formatter = new DecimalFormat("###,###");
 
         try{
             int goodsCount = shopService.goodsCount();
-            Pagination pagination = new Pagination(goodsCount, searchInfo);
+            Pagination pagination = new Pagination(goodsCount, searchInfo); // 페이징 정보 저장
 
             searchInfo.setPagination(pagination);
 
@@ -93,7 +127,6 @@ public class ShopController {
             @RequestParam(value = "goods_no") Long goodsNo)
     {
         ModelAndView mv = new ModelAndView("jsonView"); // json 형태로 데이터 전송
-        DecimalFormat formatter = new DecimalFormat("###,###");
 
         Goods goods = shopService.getGoods(goodsNo);
         goods = fileUtils.setImagePathArray(goods);     // 출력 이미지 경로 지정
@@ -157,7 +190,6 @@ public class ShopController {
     }
 
     @GetMapping("/cartSelect")
-    @ResponseBody
     public ModelAndView cartSelect(@SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
                                    HttpServletRequest request)
     {
@@ -283,7 +315,7 @@ public class ShopController {
     // 프리퀀시 적립
     @PostMapping("/order")
     @ResponseBody
-    public String order(@RequestBody Map<String, Object> map) throws JsonProcessingException {
+    public Map<String, Object> order(@RequestBody Map<String, Object> map) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
         // JSON 데이터 받아옴
@@ -295,37 +327,18 @@ public class ShopController {
         int price = 0;
         int frequencyCount = 0;
 
-        Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 구매금액>
-
         int success = 0;
         String result = "fail";
 
-        // 이벤트 별 프리퀀시 상품 구매 금액 저장
-        for (Order order : orderList) {
-            if(order.getEvent_type() != null) {
-                Long typeNo = order.getEvent_type();
-                String frequencyYn = order.getFrequency_yn();
-
-                // 구매금액 초기화
-                price = 0;
-
-                if(priceMap.containsKey(typeNo)) {
-                    price = priceMap.get(typeNo);
-                }
-                if(frequencyYn.equals("Y")) {
-                    price += (order.getPrice() * order.getQuantity());
-                }
-
-                priceMap.put(typeNo, price);
-            }
-        }
+        // 프로모션 별 프리퀀시 상품 구매 금액 저장
+        Map<Long, Integer> priceMap = setFrequencyPrice(orderList);
 
         for(Long typeNo : priceMap.keySet()) {
             Frequency f = new Frequency();
             f.setType_no(typeNo);
             f.setUser_id(sessionId);    // 구매자 아이디 -> 세션 아이디로 사용
 
-            // 해당 이벤트의 프리퀀시 데이터 존재하는지 확인
+            // 해당 프로모션의 프리퀀시 데이터 존재하는지 확인
             Frequency frequency = frequencyService.getFrequency(f);
 
             price = priceMap.get(typeNo);
@@ -335,30 +348,28 @@ public class ShopController {
                 totalPrice = 0;
                 totalPrice += price;
 
-                // 프리퀀시 최대 금액은 30만원 (총 3개)
-                if(totalPrice > 300000) {
-                    totalPrice = 300000;
-                }
-
                 frequencyCount = (int) Math.floor((double) totalPrice / 100000);   // 누적금액 10만원 당 프리퀀시 1개 적립
 
+                // 프리퀀시 최대 개수는 3개
+                if(frequencyCount > 3) {
+                    frequencyCount = 3;
+                }
                 f.setFreq_count(frequencyCount);
                 f.setFreq_amount(totalPrice);
 
                 success += frequencyService.insertFrequency(f);
             }
             else {
-                // 해당 이벤트의 프리퀀시 기존 누적 금액 불러옴
+                // 해당 프로모션의 프리퀀시 기존 누적 금액 불러옴
                 totalPrice = frequency.getFreq_amount();
                 totalPrice += price;
 
-                // 프리퀀시 최대 금액은 30만원 (총 3개)
-                if(totalPrice > 300000) {
-                    totalPrice = 300000;
-                }
-
                 frequencyCount = (int) Math.floor((double) totalPrice / 100000);   // 누적금액 10만원 당 프리퀀시 1개 적립
 
+                // 프리퀀시 최대 개수는 3개
+                if(frequencyCount > 3) {
+                    frequencyCount = 3;
+                }
                 f.setFreq_count(frequencyCount);
                 f.setFreq_amount(totalPrice);
 
@@ -375,17 +386,17 @@ public class ShopController {
             result = "success";
         }
 
-        JSONObject jo = new JSONObject();
-        jo.put("frequencyList", fList);
-        jo.put("result", result);
+        Map<String, Object> returnMap = new HashMap<>();
+        returnMap.put("frequencyList", fList);
+        returnMap.put("result", result);
 
-        return jo.toString();
+        return returnMap;
     }
 
     // 환불 및 취소
     @PostMapping("/refund")
     @ResponseBody
-    public String refund(@RequestBody Map<String, Object> map) throws JsonProcessingException {
+    public Map<String, Object> refund(@RequestBody Map<String, Object> map) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
         // JSON 데이터 받아옴
@@ -397,30 +408,11 @@ public class ShopController {
         int price = 0;
         int frequencyCount = 0;
 
-        Map<Long, Integer> priceMap = new HashMap<>();  // Map<이벤트타입, 구매금액>
-
         int success = 0;
         String result = "fail";
 
-        // 이벤트 별 프리퀀시 상품 환불 금액 저장
-        for (Order order : orderList) {
-            if(order.getEvent_type() != null) {
-                Long typeNo = order.getEvent_type();
-                String frequencyYn = order.getFrequency_yn();
-
-                // 환불금액 초기화
-                price = 0;
-
-                if (priceMap.containsKey(typeNo)) {
-                    price = priceMap.get(typeNo);
-                }
-                if (frequencyYn.equals("Y")) {
-                    price += (order.getPrice() * order.getQuantity());
-                }
-
-                priceMap.put(typeNo, price);
-            }
-        }
+        // 프로모션 별 프리퀀시 상품 환불 금액 저장
+        Map<Long, Integer> priceMap = setFrequencyPrice(orderList);
 
         for(Long typeNo : priceMap.keySet()) {
             Frequency f = new Frequency();
@@ -431,7 +423,7 @@ public class ShopController {
 
             price = priceMap.get(typeNo);
 
-            // 해당 이벤트의 프리퀀시 기존 누적 금액 불러옴
+            // 해당 프로모션의 프리퀀시 기존 누적 금액 불러옴
             totalPrice = frequency.getFreq_amount();
             totalPrice -= price;
 
@@ -441,6 +433,10 @@ public class ShopController {
 
             frequencyCount = (int) Math.floor((double) totalPrice / 100000);
 
+            // 프리퀀시 최대 개수는 3개
+            if(frequencyCount > 3) {
+                frequencyCount = 3;
+            }
             f.setFreq_count(frequencyCount);
             f.setFreq_amount(totalPrice);
 
@@ -456,105 +452,12 @@ public class ShopController {
             result = "success";
         }
 
-        JSONObject jo = new JSONObject();
-        jo.put("frequencyList", fList);
-        jo.put("result", result);
+        Map<String, Object> returnMap = new HashMap<>();
+        returnMap.put("frequencyList", fList);
+        returnMap.put("result", result);
 
-        return jo.toString();
+        return returnMap;
     }
-
-//        // 프리퀀시
-//        if(회원) {
-//
-//            int 누적금액 = 0;
-//            int 구매금액 = 0;
-//            int 프리퀀시개수 = 0;
-//
-//            // 이벤트 목록 리스트에 담음
-//            List<String> 이벤트리스트 = new ArrayList<>();
-//            for ( 상품 : 상품리스트) {
-//                이벤트리스트.add(상품.이벤트타입);
-//            }
-//
-//            for ( 이벤트타입 : 이벤트리스트) {
-//
-//                // 해당 이벤트의 프리퀀시 데이터 존재하는지 확인
-//                프리퀀시 f = getFrequency(사용자정보, 이벤트타입);
-//                // 구매금액 초기화
-//                구매금액 = 0;
-//
-//                for (상품 : 상품리스트) {
-//                    // 해당 이벤트의 프리퀀시 상품 가격을 구함
-//                    if (frequency_yn.equals('Y') && 이벤트타입.equals(상품.이벤트타입)) {
-//                        구매금액 =+ 상품.가격;
-//                    }
-//                }
-//
-//                // 첫 구매
-//                if(f == null) {
-//                    누적금액 = 0;
-//                    누적금액 = 누적금액 + 구매금액;
-//                    프리퀀시개수 = (int) Math.floor((double) 누적금액 / 10만원);
-//
-//                    insert(사용자정보, 이벤트타입, 누적금액, 프리퀀시개수);
-//                } else {
-//                    // 해당 이벤트의 프리퀀시 기존 누적 금액 불러옴
-//                    누적금액 = f.getFrequncyPrice();
-//                    누적금액 = 누적금액 + 구매금액;
-//                    프리퀀시개수 = (int) Math.floor((double) 누적금액 / 10만원);
-//
-//                    update(사용자정보, 이벤트타입, 누적금액, 프리퀀시개수);
-//                }
-//                // Math.floor( (double) (누적금액 + 구매금액) / 10) == 최종 프리퀀시 개수
-//            }
-//            // end of for
-//
-//            // 구매 목록 insert
-//            insert(사용자정보, 상품리스트);
-//
-//        } else if(비회원) {
-//            // 프리퀀시 해당 안 됨
-//            insert(사용자정보, 상품리스트);
-//        }
-//
-//        // 환불 및 취소
-//        if(회원) {
-//
-//            int 누적금액 = 0;
-//            int 환불금액 = 0;
-//            int 프리퀀시개수 = 0;
-//
-//            // 이벤트 목록 리스트에 담음
-//            List<String> 이벤트리스트 = new ArrayList<>();
-//            for ( 환불 : 환불리스트) {
-//                이벤트리스트.add(환불.이벤트타입);
-//            }
-//
-//            for ( 이벤트타입 : 이벤트리스트) {
-//                // 해당 이벤트의 프리퀀시 누적 금액 불러옴
-//                누적금액 = getFrequncyPrice(사용자정보, 이벤트타입);
-//                // 구매금액 초기화
-//                환불금액 = 0;
-//
-//                for (환불 : 환불리스트) {
-//                    if (frequency_yn.equals('Y') && 이벤트타입.equals(환불.이벤트타입)) {
-//                        환불금액 =+ 환불.가격;
-//                    }
-//                }
-//
-//                누적금액 = 누적금액 - 환불금액;
-//                프리퀀시개수 = (int) Math.floor((double) 누적금액 / 10만원);
-//
-//                update(사용자정보, 이벤트타입, 누적금액, 프리퀀시개수);
-//            }
-//            // end of for
-//
-//            update(사용자정보, 환불리스트);    // 취소처리
-//
-//        } else if (비회원) {
-//            // 프리퀀시 해당 안 됨
-//            update(사용자정보, 환불리스트);    // 취소처리
-//        }
 
 }
 

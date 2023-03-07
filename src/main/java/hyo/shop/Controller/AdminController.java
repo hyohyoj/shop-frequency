@@ -37,7 +37,13 @@ public class AdminController {
         return "/error";
     }
 
-    // 관리자 페이지 내부 기능 권한 체크
+    /**
+     * 관리자 페이지 내부 기능 권한 체크
+     * @param loginMember   - 로그인 정보
+     * @param redirect      - 리다이렉트 주소
+     * @param request       - request
+     * @return 리다이렉트 주소
+     */
     public String adminSessionRedirect(Login loginMember, String redirect, HttpServletRequest request) {
         if(!loginMember.getAuth_code().equals("admin")) {
             HttpSession session = request.getSession();
@@ -92,6 +98,7 @@ public class AdminController {
 
         model.addAttribute("goodsForm", goods);
         model.addAttribute("fileList", fileList);       // 게시글 첨부 파일 목록
+
         return url;
     }
 
@@ -163,7 +170,7 @@ public class AdminController {
         if(success >= 1) {
             result = "성공";
 
-            // insert한 게시글의 goods_no 받아옴
+            // insert 한 게시글의 goods_no 받아옴
             Long goodsNo = goods.getGoods_no();
             System.out.println("goodsNo : " +  goodsNo);
 
@@ -182,11 +189,9 @@ public class AdminController {
 
     // ModelAndView 형태로 데이터가 세팅 된 뷰를 반환
     @PostMapping("/getGoodsList")
-    @ResponseBody
     public ModelAndView getGoodsList(
             @RequestBody Map<String, Object> map,      // JSON 형식으로 받아옴
-            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember
-    )
+            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember)
     {
 
         ModelAndView mv = new ModelAndView("jsonView"); // json 형태로 데이터 전송
@@ -221,93 +226,6 @@ public class AdminController {
         }
         return mv;
     }
-
-//
-//    @PostMapping("/boardType/insert")
-//    @ResponseBody
-//    public int insertBoardType(@ModelAttribute BoardType boardType) {
-//        return boardTypeService.insertBoardType(boardType);
-//    }
-//
-//    @GetMapping("/getUserList")
-//    @ResponseBody
-//    public ModelAndView getUserList() {
-//        List<Login> userList = null;
-//        ModelAndView mv = new ModelAndView();
-//
-//        try {
-//            userList = loginService.getUserList();
-//
-//            mv.setViewName("/admin/setUserList");
-//            mv.addObject("userList", userList);
-//        } catch (Exception e) {
-//            mv.setViewName("/error");
-//            return mv;
-//        }
-//
-//        return mv;
-//    }
-//
-//    @GetMapping("/userDetailForm")
-//    public String userDetailForm(
-//            Model model,
-//            @RequestParam(value = "user_id") String userId,
-//            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
-//            HttpServletRequest request)
-//    {
-//        String url = adminSessionRedirect(loginMember, request.getRequestURI(), request);
-//
-//        Login login = new Login();
-//        login.setUser_id(userId);
-//
-//        UserAuth userAuth = new UserAuth();
-//        userAuth.setUser_id(userId);
-//
-//        model.addAttribute("userInfo", loginService.getUser(login));
-//        model.addAttribute("authList", userAuthService.getUserAuthList(userAuth));
-//
-//        return url;
-//    }
-//
-//    @PostMapping("/loginAuth/update")
-//    @ResponseBody
-//    public int loginAuthUpdate(@ModelAttribute Login login) {
-//        return loginService.updateUser(login);
-//    }
-//
-//    @PostMapping("/userAuth/delete")
-//    @ResponseBody
-//    public int deleteUserAuth(@ModelAttribute UserAuth userAuth) {
-//        return userAuthService.deleteUserAuth(userAuth);
-//    }
-//
-//    @GetMapping("/popup/authPopup")
-//    public String authPopup(
-//            Model model,
-//            @RequestParam(value = "user_id") String userId,
-//            @SessionAttribute(name = SessionConstants.LOGIN_MEMBER, required = false) Login loginMember,
-//            HttpServletRequest request)
-//    {
-//        String url = adminSessionRedirect(loginMember, request.getRequestURI(), request);
-//
-//        List<BoardType>boardTypeList = boardTypeService.getBoardTypeList("admin");
-//
-//        model.addAttribute("userId", userId);
-//        model.addAttribute("boardTypeList", boardTypeList);
-//        return url;
-//    }
-//
-//    @PostMapping("/userAuth/insert")
-//    @ResponseBody
-//    public int insertUserAuth(@ModelAttribute UserAuth userAuth) {
-//        return userAuthService.insertUserAuth(userAuth);
-//    }
-//
-//    @PostMapping("/userAuth/check")
-//    @ResponseBody
-//    public int checkUserAuth(@ModelAttribute UserAuth userAuth) {
-//        return userAuthService.checkUserAuth(userAuth);
-//    }
 
 }
 

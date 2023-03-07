@@ -45,6 +45,7 @@ drop table cart_info;
 
 create table frequency_info (
 	freq_no int not null auto_increment primary key,
+	type_no int,
     user_id varchar(50),
     freq_count int default 0,
     freq_amount int default 0,
@@ -53,11 +54,15 @@ create table frequency_info (
     delete_yn char(1) not null default 'N'
 );
 
+drop table frequency_info;
+
 select * from user_info;
 select * from goods_info;
 select * from cart_info;
 select * from frequency_info;
 select * from file_info;
+
+delete from frequency_info;
 
 select   c.cart_no
 		,c.user_id
